@@ -59,6 +59,122 @@ one-line wrapper script, such as the following:
 
     bake --owner 'Sean Kelleher' --email ezanmoto@gmail.com -v "$@"
 
+### Project Templates
+
+Project templates are placed in a `templates` directory in a platform-specific
+install directory (for instance `C:\Program Files` on a windows system or
+`/usr/share` on a Unix-like platform). This will be referred to as the templates
+directory for the remainder of this section.
+
+#### Language Template Structure
+
+Templates for projects in specific languages are stored directly in the
+templates directory. The layout of such language templates are described as
+follows:
+
+    templates/LanguageName/{ProjectName}/
+    templates/LanguageName/Basic
+    templates/LanguageName/Executable
+    templates/LanguageName/Library
+
+Where the `{ProjectName}` directory contains all the actual templates. The
+`Basic` file contains a listing of paths of all templates that are included
+regardless of the actual project type. The `Executable` and `Library` files
+contain listings of paths of templates that will be included in addition to the
+"basic" file list, if these project types are specified. Such project include
+files have the following form:
+
+    file1
+    file2
+    file3
+    directory1/
+        file4
+        directory2/
+            file5
+        file6
+    file7
+    directory3/
+        file8
+
+Where each item ending in `/` denotes a directory and each file and each item at 
+a particular level is thought to be contained in the first preceding directory
+at the higher level.
+
+#### Names
+
+The only characters allowed in inserts and includes are capital and lowercase
+letters, and numbers. Variable and project names in inserts and includes should
+be written in pascal case (each term in the name should be lowercase, starting
+with an uppercase letter, such as ApplesAndOranges). Names are case-insensitive.
+
+#### Outputting Reserved Characters
+
+`{` characters must be escaped by using `{{`, so that they won't be interpreted
+as the beginning of an insert or include. For consistency, `}` must also be
+escaped, using `}}`.
+
+#### Project Variable Inserts
+
+This type of variable inserts the associated required variable, or outputs an
+error if the named variable does not exist. The form of a project variable
+insert is as follows:
+
+    This is the {ProjectName} project.
+
+##### List of Supported Variable Inserts
+
+This is a list of project variables that you can use in templates that should
+always be present.
+
++ ProjectName
++ LowercaseProjectName
++ Owner
+
+#### Variable-Dependent Includes
+
+These types of additions are only included if the referenced variable has been
+supplied to the program, such as a maintainer email. Such an include has one of
+the following two forms:
+
+    {?MaintainerEmail:email:         {MaintainerEmail}}
+    {?MaintainerEmail:descrption:    Email {MaintainerEmail} with any issues.}
+
+    {?MaintainerEmail:
+    email:          {MaintainerEmail}
+    description:    Email {MaintainerEmail} with any issues.
+    }
+
+The single-line form replaces the entire declaration (from just before the
+opening brace to just after the closing brace). The multi-line form omits the
+first newline that follows the colon and the first newline that follows the
+closing brace from the output, if said newline characters exist.
+
+A variable-dependent include that depends on multiple variables may join all
+required variables together using `&` as a prerequisite for its inclusion. An
+example of this may be:
+
+    {?MaintainerName&MaintainerEmail:
+    You may reach the maintainer, {MaintainerName}, at {MaintainerEmail}.
+    }
+
+A statement such as that in the example will only be included if
+`MaintainerName` and `MaintainerEmail` were provided.
+
+You can only nest variable inserts in the body of a variable-dependent include.
+
+#### Project-Dependent Includes
+
+These types of additions are only included if the project being built is of the
+referenced type, such as an executable type. Project-dependent has the same
+forms and follows the same rules as variable-dependent includes, except it is
+denoted with a preceding `!` character, instead of `?`. An example of its use
+is:
+
+    {!Executable&Test:
+    build/{ProjectName}.o: src/{ProjectName}.c
+        gcc src/{ProjectName}.c -o build/{ProjectName}.o
+    }
+
 ### Standard Output
 
 The standard output of bake will be the paths of files and directories created
