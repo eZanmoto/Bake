@@ -100,6 +100,10 @@ Where each item ending in `/` denotes a directory and each file and each item at
 a particular level is thought to be contained in the first preceding directory
 at the higher level.
 
+The reason for this approach is its minimalist yet concise nature, it is
+relatively easy to read and parse. The use of indentation removes the need for
+listing the directory path for each file separately.
+
 #### Names
 
 The only characters allowed in inserts and includes are capital and lowercase
@@ -112,6 +116,14 @@ with an uppercase letter, such as ApplesAndOranges). Names are case-insensitive.
 `{` characters must be escaped by using `{{`, so that they won't be interpreted
 as the beginning of an insert or include. For consistency, `}` must also be
 escaped, using `}}`.
+
+The delimiters that were considered for containing inserts and includes were
+
+    { }   [ ]   ( )   | |   < >
+
+The chosen delimiters were selected as their position in code is usually easier
+to predict and change than that of the others. They also tend to occur less
+frequently in non-C-style languages.
 
 #### Project Variable Inserts
 
