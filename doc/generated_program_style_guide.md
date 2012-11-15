@@ -54,7 +54,7 @@ across all languages.
 
 + The program should use a function defined in a separate module
 + The program should be written in a style conforming to the general style
-	guidelines of that language
+  guidelines of that language
 
 The following program templates named in the following sections should be
 included in each language that supports them.
