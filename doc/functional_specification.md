@@ -21,8 +21,7 @@ Kelleher'.
 
 ##### Additional Project Information
 
-+ --type        -t  The type of project, e.g. command, gui, library, etc. Type
-                    defaults to 'command' if nothing is specified.
++ --type        -t  The type of project, e.g. command, gui, library, etc.
 + --email       -e  The email address of the owner.
 
 ##### Help
@@ -31,6 +30,8 @@ Kelleher'.
                     the basic commands.
 + --languages   -L  Prints the different languages that projects can currently
                     be generated in.
++ --types       -T  Prints the different project types that can be added to a
+                    project in the specified language.
 
 ##### Miscellaneous
 
@@ -73,15 +74,15 @@ templates directory. The layout of such language templates are described as
 follows:
 
     templates/LanguageName/{ProjectName}/
-    templates/LanguageName/Basic
+    templates/LanguageName/Base
     templates/LanguageName/Executable
     templates/LanguageName/Library
 
 Where the `{ProjectName}` directory contains all the actual templates. The
-`Basic` file contains a listing of paths of all templates that are included
+`Base` file contains a listing of paths of all templates that are included
 regardless of the actual project type. The `Executable` and `Library` files
 contain listings of paths of templates that will be included in addition to the
-"basic" file list, if these project types are specified. Such project include
+"base" file list, if these project types are specified. Such project include
 files have the following form:
 
     file1
@@ -186,6 +187,13 @@ is:
     build/{ProjectName}.o: src/{ProjectName}.c
         gcc src/{ProjectName}.c -o build/{ProjectName}.o
     }
+
+### Project Types
+
+The type of project to be generated is supplied to bake using the `--type` or
+`-t` options. Each project type specified causes that project type's files
+(specified in the language's template root) to be generated, and
+project-dependant includes that specify that project to be included.
 
 ### Standard Output
 
