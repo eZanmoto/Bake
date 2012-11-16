@@ -28,8 +28,8 @@ generating meaningful documentation.
 
 #### Progress Control
 
-+ --resolve     -r If files that bake wants to create exist, resolve the
-                   differences instead of skipping.
++ --resolve     -r  If files that bake wants to create exist, resolve the
+                    differences instead of skipping.
 
 ##### Help
 
