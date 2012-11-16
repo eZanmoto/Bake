@@ -9,7 +9,9 @@ Sean Kelleher
     bake -o 'Sean Kelleher' -n Bake -l haskell
 
 Will generate a new Haskell project called 'Bake' whose owner is 'Sean
-Kelleher'.
+Kelleher'. Using PascalCase for the project name will allow bake to decompose
+the name to generate language-conforming directory/file names, as well as
+generating meaningful documentation.
 
 #### Arguments
 
