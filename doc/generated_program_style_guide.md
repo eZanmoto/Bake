@@ -52,6 +52,8 @@ below.
 The following guidelines should, in general, be applied to all types of projects
 across all languages.
 
++ The project should have a README.md file in the root folder of the project
+  which outlines how to build and run the project (at least)
 + The program should use a function defined in a separate module
 + The program should be written in a style conforming to the general style
   guidelines of that language
