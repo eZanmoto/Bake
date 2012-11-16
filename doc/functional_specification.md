@@ -26,7 +26,7 @@ generating meaningful documentation.
 + --type        -t  The type of project, e.g. command, gui, library, etc.
 + --email       -e  The email address of the owner.
 
-#### Progress Control
+##### Progress Control
 
 + --resolve     -r  If files that bake wants to create exist, resolve the
                     differences instead of skipping.
