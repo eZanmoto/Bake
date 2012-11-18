@@ -25,6 +25,7 @@ generating meaningful documentation.
 
 + --type        -t  The type of project, e.g. command, gui, library, etc.
 + --email       -e  The email address of the owner.
++ --license     -i  The software license the project is covered by.
 
 ##### Progress Control
 
@@ -39,6 +40,7 @@ generating meaningful documentation.
                     be generated in.
 + --types       -T  Prints the different project types that can be added to a
                     project in the specified language.
++ --licenses    -I  Prints the different licenses that can be used.
 
 ##### Miscellaneous
 
