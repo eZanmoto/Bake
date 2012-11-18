@@ -146,11 +146,11 @@ insert is as follows:
 ##### List of Supported Variable Inserts
 
 This is a list of project variables that you can use in templates that should
-always be present.
+always be present. Variables are case-sensitive.
 
-+ ProjectName
-+ LowercaseProjectName
 + Owner
++ LowercaseProjectName
++ ProjectName
 
 #### Variable-Dependent Includes
 
@@ -183,6 +183,14 @@ A statement such as that in the example will only be included if
 `MaintainerName` and `MaintainerEmail` were provided.
 
 You can only nest variable inserts in the body of a variable-dependent include.
+
+##### List of Supported Optional Variable
+
+You may use the following variables in variable dependent includes. Variables
+are case-sensitive.
+
++ Email
++ Licence
 
 #### Project-Dependent Includes
 
