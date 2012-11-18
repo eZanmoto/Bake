@@ -76,6 +76,10 @@ install directory (for instance `C:\Program Files` on a windows system or
 `/usr/share` on a Unix-like platform). This will be referred to as the templates
 directory for the remainder of this section.
 
+Project templates are located in the $BAKE\templates directory. An environment
+variable is used to allow access to the templates directory in a platform
+independent manner.
+
 #### Language Template Structure
 
 Templates for projects in specific languages are stored directly in the
