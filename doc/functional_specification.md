@@ -71,14 +71,10 @@ one-line wrapper script, such as the following:
 
 ### Project Templates
 
-Project templates are placed in a `templates` directory in a platform-specific
-install directory (for instance `C:\Program Files` on a windows system or
-`/usr/share` on a Unix-like platform). This will be referred to as the templates
-directory for the remainder of this section.
-
 Project templates are located in the $BAKE\templates directory. An environment
 variable is used to allow access to the templates directory in a platform
-independent manner.
+independent manner. This will be referred to as the templates directory for the
+remainder of this section.
 
 #### Language Template Structure
 
