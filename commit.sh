@@ -8,7 +8,14 @@
 # on multiple platforms, which makes it as good as an interpreted programming
 # language for the purpose of this script.
 
-# Run build
+# Extra build checks
+go tool vet src
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
+
+# Build
 go install bake
 if [ $? -ne 0 ]
 then
