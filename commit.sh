@@ -23,11 +23,14 @@ then
 fi
 
 # Run tests
-go test bake
-if [ $? -ne 0 ]
-then
-    exit 1
-fi
+for PROJ in bake tests/perm
+do
+	go test $PROJ
+	if [ $? -ne 0 ]
+	then
+	    exit 1
+	fi
+done
 
 # Check formatting
 FMT=$(gofmt -d -s src)
