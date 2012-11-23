@@ -50,4 +50,10 @@ then
 fi
 
 # Commit
-git commit
+if [ $# -ne 1 ]
+then
+	echo "\n$0 expects commit message"
+	exit 1
+fi
+
+git commit -m "$1"
