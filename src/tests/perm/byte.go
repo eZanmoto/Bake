@@ -15,6 +15,9 @@ type BytePermuter struct {
 	count byte
 }
 
+// NewBytePermuter creates a structure that creates byte slice permutations.
+// NewBytePermuter will panic on count of 0, as one can't permute over a range
+// of 0 different numbers.
 func NewBytePermuter(start, count byte) *BytePermuter {
 	if count == 0 {
 		panic("Can't permute over 0 different values")

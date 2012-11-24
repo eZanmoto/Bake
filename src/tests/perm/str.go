@@ -10,6 +10,9 @@ type StringPermuter struct {
 	chars  []byte
 }
 
+// NewStringPermuter creates a structure that creates string permutations.
+// NewStringPermuter will panic on an empty string, as there are no permutations
+// over the range of characters in an empty string.
 func NewStringPermuter(s string) *StringPermuter {
 	chars := []byte(s)
 	p := NewBytePermuter(0, byte(len(chars)))
