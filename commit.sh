@@ -8,7 +8,12 @@
 # on multiple platforms, which makes it as good as an interpreted programming
 # language for the purpose of this script.
 
+# Test build
 ./build.sh
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
 
 # Commit
 if [ $# -ne 1 ]
