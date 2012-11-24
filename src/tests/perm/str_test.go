@@ -57,3 +57,13 @@ func TestLongStrPerms(t *testing.T) {
 	expectNextStr(t, p, "aaaaaaaaaa")
 	expectNextStr(t, p, "aaaaaaaaaaa")
 }
+
+func TestStrPermCount(t *testing.T) {
+	defer func() {
+		if err := recover(); err == nil {
+			t.Fatalf("Expected error, got none")
+		}
+	}()
+
+	NewStringPermuter("")
+}
