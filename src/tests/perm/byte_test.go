@@ -55,3 +55,13 @@ func TestLongPerms(t *testing.T) {
 	expectNext(t, p, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	expectNext(t, p, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 }
+
+func TestPermCount(t *testing.T) {
+	defer func() {
+		if err := recover(); err == nil {
+			t.Fatalf("Expected error, got none")
+		}
+	}()
+
+	NewBytePermuter(0, 0)
+}
