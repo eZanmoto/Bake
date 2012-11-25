@@ -32,6 +32,7 @@ fi
 # Run tests
 for PROJ in bake bake/proj tests/perm
 do
+	go test -i $PROJ
 	go test $PROJ
 	if [ $? -ne 0 ]
 	then
