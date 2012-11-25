@@ -69,6 +69,30 @@ one-line wrapper script, such as the following:
 
     bake --owner 'Sean Kelleher' --email ezanmoto@gmail.com -v "$@"
 
+#### Support for Mutually Exclusive Types
+
+This section discusses the need for mutually exclusive project types, such as
+two projects whose compilation depends on a specific environment or
+compiler/interpreter implementation.
+
+This functionality would clutter up the project templates with
+implementation-specific (and therefore, not general, or necessarily
+widely-adopted) code.
+
+It would complicate the generation process, by adding more rules and checks at
+project generation time.
+
+It would add redundancy to files, as every pair of exclusive projects would need
+to list each other, possibly resulting in bugs due to one project being listed
+as exclusive of another who doesn't think it is, or else, duplicating checks.
+
+It would complicate testing, as some generated projects would have to be tested
+with specific compilers and interpreters.
+
+The benefit of this feature (minor convenience for what appears to be a small
+subset of use cases) is vastly overshadowed by its drawbacks, and will not be
+included.
+
 ### Project Templates
 
 Project templates are located in the $BAKE\templates directory. An environment
