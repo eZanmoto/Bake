@@ -213,7 +213,7 @@ A statement such as that in the example will only be included if
 
 You can only nest variable inserts in the body of a variable-dependent include.
 
-##### List of Supported Optional Variable
+##### List of Supported Optional Variables
 
 You may use the following variables in variable dependent includes. Variables
 are case-sensitive.
