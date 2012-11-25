@@ -118,6 +118,7 @@ contain listings of paths of templates that will be included in addition to the
 "base" file list, if these project types are specified. Such project include
 files have the following form:
 
+    One line description
     file1
     file2
     file3
@@ -130,9 +131,13 @@ files have the following form:
     directory3/
         file8
 
-Where each item ending in `/` denotes a directory and each file and each item at 
-a particular level is thought to be contained in the first preceding directory
-at the higher level.
+The one line description must be a maximum of 50 characters or an error will be
+signalled. The description is output as part of the result of the T command.
+This description is not optional, and is not terminated by a period.
+
+Each item ending in `/` denotes a directory and each file and each item at a
+particular level is thought to be contained in the first preceding directory at
+the higher level.
 
 The reason for this approach is its minimalist yet concise nature, it is
 relatively easy to read and parse. The use of indentation removes the need for
