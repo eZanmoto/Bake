@@ -13,10 +13,11 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"tests/perm"
 )
 
 var (
-	bake           = path.Join(os.Getenv("BAKE"), "bin", "bake")
+	bakeProg       = path.Join(os.Getenv("BAKE"), "bin", "bake")
 	supportedLangs = sort.StringSlice([]string{
 		"go",
 	})
@@ -36,7 +37,7 @@ func TestMissingOwnerArg(t *testing.T) {
 }
 
 func runBake(t *testing.T, args ...string) (cmd *exec.Cmd, o, e string) {
-	cmd = exec.Command(bake, args...)
+	cmd = exec.Command(bakeProg, args...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -150,4 +151,42 @@ func readLines(in io.Reader) (string, error) {
 		lines += line
 	}
 	return lines, nil
+}
+
+func TestGenProjDir(t *testing.T) {
+	dir := os.TempDir()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Error changing directory: %v", err)
+	}
+
+	nameGen := perm.NewStringPermuter("abc")
+	nameGen.Permute() // Skip empty name
+
+	for _, lang := range supportedLangs {
+		name := nameGen.Permute()
+
+		if e := os.RemoveAll(name); e != nil && !os.IsNotExist(e) {
+			t.Fatalf("Error removing '%s': %v", name, e)
+		}
+
+		bake(t, name, "owner", lang)
+
+		if fi, err := os.Stat(name); err != nil {
+			t.Fatalf("Error getting status of '%s': %v", name, err)
+		} else if !fi.IsDir() {
+			t.Errorf("Expected '%s' to be directory", name)
+		}
+	}
+}
+
+func bake(t *testing.T, name, owner, lang string) {
+	cmd, _, errput := runBake(t, "-n", name, "-o", owner, "-l", lang)
+
+	if len(errput) != 0 {
+		t.Fatalf("stderr was not empty: %s", errput)
+	}
+
+	if !cmd.ProcessState.Success() {
+		t.Fatalf("bake exited with error")
+	}
 }
