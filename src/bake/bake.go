@@ -8,12 +8,19 @@ package main
 
 import (
 	"bake/env"
+	"bake/proj"
 	"flag"
 	"fmt"
 	"os"
 	"sort"
 )
 
+// Switch options
+var (
+	verbose = flag.Bool("v", false, "Print extra progress information")
+)
+
+// Help options
 var (
 	langs = flag.Bool("L", false, "Print supported languages")
 
@@ -22,6 +29,7 @@ var (
 	}
 )
 
+// Required options
 var (
 	lang  = flag.String("l", "", "The language of the project")
 	owner = flag.String("o", "", "The owner of the project")
@@ -45,6 +53,19 @@ func main() {
 		fmt.Fprintf(os.Stderr, "'"+*lang+"' is not a valid language\n")
 		fmt.Fprintf(os.Stderr, "Use -languages to see valid options\n")
 		os.Exit(2)
+	}
+
+	vars := map[string]string{
+		"ProjectName": *name,
+		"Owner":       *owner,
+	}
+
+	p := proj.New(*lang, *verbose, vars)
+
+	err = p.GenTo("")
+
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 

@@ -8,7 +8,7 @@ import "io/ioutil"
 
 // SupportedLangs returns the languages supported by bake
 func SupportedLangs() ([]string, error) {
-	templatesPath, err := templatesPath()
+	templatesPath, err := TemplatesPath()
 	if err != nil {
 		return nil, err
 	}

@@ -15,7 +15,7 @@ const (
 	templatesDir = "templates" // The directory containing bake templates
 )
 
-func templatesPath() (string, error) {
+func TemplatesPath() (string, error) {
 	bakeDir := os.Getenv(bakeVar)
 	if len(bakeDir) == 0 {
 		return "", errors.New("bake environment variable not set")
