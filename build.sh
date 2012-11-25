@@ -8,6 +8,13 @@
 # on multiple platforms, which makes it as good as an interpreted programming
 # language for the purpose of this script.
 
+# Clean
+go clean
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
+
 # Extra build checks
 go tool vet src
 if [ $? -ne 0 ]
@@ -23,7 +30,7 @@ then
 fi
 
 # Run tests
-for PROJ in bake tests/perm
+for PROJ in bake bake/proj tests/perm
 do
 	go test $PROJ
 	if [ $? -ne 0 ]
