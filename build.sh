@@ -30,7 +30,7 @@ then
 fi
 
 # Run tests
-for PROJ in bake bake/proj tests/perm
+for PROJ in tests/perm bake bake/proj
 do
 	go test -i $PROJ
 	go test $PROJ
