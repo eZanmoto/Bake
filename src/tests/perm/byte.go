@@ -46,16 +46,7 @@ func (p *BytePermuter) Permute() []byte {
 	}
 
 	if overflow {
-		n := len(bs)
-		if n == cap(bs) {
-			cs := make([]byte, n*2)
-			for i := range bs {
-				cs[i] = bs[i]
-			}
-			bs = cs
-		}
-		bs = bs[0 : n+1]
-		bs[n] = p.start
+		bs = append(bs, p.start)
 	}
 
 	p.bytes = bs
