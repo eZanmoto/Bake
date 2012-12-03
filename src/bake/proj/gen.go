@@ -76,7 +76,11 @@ func (p *Project) genFile(src, tgt string) error {
 	}
 	defer out.Close()
 
-	defer fmt.Printf("Generated file '%s'\n", tgt)
+	if p.verbose {
+		defer fmt.Printf("Generated file '%s'\n", tgt)
+	} else {
+		defer fmt.Printf("%s\n", tgt)
+	}
 
 	return p.parse(in, out)
 }
