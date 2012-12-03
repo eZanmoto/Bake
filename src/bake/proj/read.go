@@ -87,25 +87,27 @@ func parseInclsFile(path string) (*fsNode, error) {
 func parseIncls(reader io.Reader) (*fsNode, error) {
 	in := bufio.NewReader(reader)
 	nodePath := []*fsNode{{"", []*fsNode{}}}
+	enterDir := false
 
 	for {
-		var line string
 		line, err := in.ReadString('\n')
-
 		if err != nil {
-			if err == io.EOF {
+			if err != io.EOF {
+				return nil, err
+			}
+			if len(line) == 0 {
 				break
 			}
-			return nil, err
 		}
 
 		lvl := indentLvl(line)
-		if lvl >= len(nodePath) {
+		if enterDir && lvl != len(nodePath)-1 || lvl >= len(nodePath) {
 			return nil, fmt.Errorf("Bad indentation: '%s'", line)
 		} else {
 			nodePath = nodePath[:lvl+1]
 		}
 		curDir := nodePath[len(nodePath)-1]
+		enterDir = false
 
 		name := strings.TrimRight(line, "\n")[lvl:]
 		if len(name) == 0 {
@@ -117,8 +119,13 @@ func parseIncls(reader io.Reader) (*fsNode, error) {
 			}
 			dir, _ := curDir.childNamed(d)
 			nodePath = append(nodePath, dir)
+			enterDir = true
 		} else if !curDir.addFile(name) {
 			return nil, fmt.Errorf("Repeated name '%s'", name)
+		}
+
+		if err == io.EOF {
+			break
 		}
 	}
 
