@@ -22,4 +22,10 @@ then
 	exit 1
 fi
 
+if [ ${#1} -gt 50 ]
+then
+	echo "\nCommit message cannot be more than 50 characters"
+	exit 1
+fi
+
 git commit -m "$1"
