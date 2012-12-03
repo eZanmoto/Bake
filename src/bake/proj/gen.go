@@ -7,60 +7,46 @@ package proj
 import (
 	"bake/env"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
+)
+
+const (
+	baseInclFile = "base"
 )
 
 // GenTo generates the project p to dest.
 func (p *Project) GenTo(dest string) error {
 	templPath, err := env.TemplatesPath()
-
 	if err != nil {
 		return err
 	}
 
-	root := path.Join(templPath, p.lang)
-	return p.genDir(root, dest, "{ProjectName}")
+	langRoot := path.Join(templPath, p.lang)
+
+	incls, err := parseInclsFile(path.Join(langRoot, baseInclFile))
+	if err != nil {
+		return err
+	}
+	incls.name = "{ProjectName}"
+
+	return p.genDirConts(&fsNode{"", []*fsNode{incls}}, langRoot, "")
 }
 
-func (p *Project) genDir(srcDir, tgtDir, dirName string) error {
-	src := path.Join(srcDir, dirName)
+func (p *Project) genDirConts(dir *fsNode, srcDir, tgtDir string) error {
+	for _, node := range dir.children {
+		src := path.Join(srcDir, node.name)
 
-	tgtName, err := p.parseStr(dirName)
-	if err != nil {
-		return err
-	}
-	tgt := path.Join(tgtDir, tgtName)
-
-	if err := os.Mkdir(tgt, 0777); err != nil {
-		if !os.IsExist(err) {
+		tgtName, err := p.parseStr(node.name)
+		if err != nil {
 			return err
 		}
-		if p.verbose {
-			fmt.Printf("Directory '%s' exists, skipping...\n", tgt)
-		}
-	} else if p.verbose {
-		fmt.Printf("Created directory '%s'\n", tgt)
-	} else {
-		fmt.Printf("%s\n", tgt)
-	}
+		tgt := path.Join(tgtDir, tgtName)
 
-	return p.genDirConts(src, tgt)
-}
-
-func (p *Project) genDirConts(srcDir, tgtDir string) error {
-	files, err := ioutil.ReadDir(srcDir)
-
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			err = p.genDir(srcDir, tgtDir, file.Name())
-		} else {
-			err = p.genFile(srcDir, tgtDir, file.Name())
+		if node.children == nil { // not a dir
+			err = p.genFile(src, tgt)
+		} else if err = p.genDir(tgt); err == nil {
+			err = p.genDirConts(node, src, tgt)
 		}
 
 		if err != nil {
@@ -71,15 +57,7 @@ func (p *Project) genDirConts(srcDir, tgtDir string) error {
 	return nil
 }
 
-func (p *Project) genFile(srcDir, tgtDir, fileName string) error {
-	src := path.Join(srcDir, fileName)
-
-	tgtName, err := p.parseStr(fileName)
-	if err != nil {
-		return err
-	}
-	tgt := path.Join(tgtDir, tgtName)
-
+func (p *Project) genFile(src, tgt string) error {
 	in, err := os.OpenFile(src, os.O_RDONLY, 0666)
 	if err != nil {
 		return err
@@ -101,4 +79,21 @@ func (p *Project) genFile(srcDir, tgtDir, fileName string) error {
 	defer fmt.Printf("Generated file '%s'\n", tgt)
 
 	return p.parse(in, out)
+}
+
+func (p *Project) genDir(dir string) error {
+	if err := os.Mkdir(dir, 0777); err != nil {
+		if !os.IsExist(err) {
+			return err
+		}
+		if p.verbose {
+			fmt.Printf("Directory '%s/' exists, skipping...\n", dir)
+		}
+	} else if p.verbose {
+		fmt.Printf("Created directory '%s/'\n", dir)
+	} else {
+		fmt.Printf("%s/\n", dir)
+	}
+
+	return nil
 }
