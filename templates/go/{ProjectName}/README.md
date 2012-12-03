@@ -1,5 +1,5 @@
 {ProjectName}
 ====
 
-{Owner}
+{Owner}{?Email: ({Email})}
 ----

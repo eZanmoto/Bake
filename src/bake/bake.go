@@ -15,25 +15,20 @@ import (
 	"sort"
 )
 
-// Switch options
 var (
 	verbose = flag.Bool("v", false, "Print extra progress information")
-)
-
-// Help options
-var (
-	langs = flag.Bool("L", false, "Print supported languages")
 
 	helpArgs = map[*bool]func(){
-		langs: printLangs,
+		flag.Bool("L", false, "Print supported languages"): printLangs,
 	}
-)
 
-// Required options
-var (
-	lang  = flag.String("l", "", "The language of the project")
-	owner = flag.String("o", "", "The owner of the project")
-	name  = flag.String("n", "", "The name of the project")
+	optionalArgs = map[string]*string{
+		"Email": flag.String("e", "", "Email address of the owner"),
+	}
+
+	lang  = flag.String("l", "", "Language of the project")
+	owner = flag.String("o", "", "Owner of the project")
+	name  = flag.String("n", "", "Name of the project")
 
 	requiredArgs = map[string]*string{
 		"l": lang,
@@ -58,6 +53,12 @@ func main() {
 	vars := map[string]string{
 		"ProjectName": *name,
 		"Owner":       *owner,
+	}
+
+	for argName, argVal := range optionalArgs {
+		if *argVal != "" {
+			vars[argName] = *argVal
+		}
 	}
 
 	p := proj.New(*lang, *verbose, vars)
