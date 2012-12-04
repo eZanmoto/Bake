@@ -33,7 +33,8 @@ func expectParse(t *testing.T, p *Project, before, after string) {
 	if err != nil {
 		t.Fatalf("Unexpected error while parsing '%s': %v", before, err)
 	} else if after != result {
-		t.Fatalf("'%s': Expected '%s', got '%s'", before, after, result)
+		t.Fatalf("Parsing:\n%s\nExpected:\n%s\nGot:\n%s\n",
+			before, after, result)
 	}
 }
 
@@ -106,6 +107,10 @@ func TestParseVarDepsInc(t *testing.T) {
 		expectParse(t, p,
 			fmt.Sprintf("%s{?%s:{%s}}%s", z, a, a, z),
 			z+b+z)
+
+		expectParse(t, p,
+			fmt.Sprintf("%s\n{?%s:\n{%s}\n}\n%s", z, a, a, z),
+			z+"\n"+b+"\n"+z)
 
 		expectParse(t, p,
 			fmt.Sprintf("{?%s:%s{%s}%s}", z, a, a, z),

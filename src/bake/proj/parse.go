@@ -130,6 +130,10 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 		return p.exitDirective(in)
 	}
 
+	if in.Peek() == '\n' {
+		in.Next()
+	}
+
 	for in.Peek() != scanner.EOF {
 		assignedChar := false
 		var char rune
@@ -149,7 +153,7 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 			}
 		case rDelim:
 			in.Next()
-			if c := in.Peek(); c == rDelim {
+			if in.Peek() == rDelim {
 				in.Next()
 				assignedChar, char = true, rDelim
 			} else {
@@ -157,6 +161,19 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 			}
 		case scanner.EOF:
 			break
+		case '\n':
+			in.Next()
+			if in.Peek() == rDelim {
+				in.Next()
+				if in.Peek() == rDelim {
+					in.Next()
+					assignedChar, char = true, rDelim
+				} else {
+					break
+				}
+			} else {
+				assignedChar, char = true, '\n'
+			}
 		default:
 			assignedChar, char = true, in.Next()
 		}
