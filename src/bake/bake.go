@@ -96,7 +96,7 @@ func langExists(lang string) (bool, error) {
 		return false, err
 	}
 
-	langsSlice := sort.StringSlice(langs[0:])
+	langsSlice := sort.StringSlice(langs)
 	langsSlice.Sort()
 	return langsSlice.Search(lang) != langsSlice.Len(), nil
 }
