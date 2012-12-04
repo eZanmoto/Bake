@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -39,36 +40,38 @@ func (n *fsNode) childNamed(name string) (*fsNode, bool) {
 	return nil, false
 }
 
-func (n *fsNode) addDir(name string) bool {
+func (n *fsNode) addDir(name string) {
 	if _, exists := n.childNamed(name); !exists {
-		n.children = append(n.children,
-			&fsNode{name, []*fsNode{}})
-		return true
+		n.children = append(n.children, &fsNode{name, []*fsNode{}})
 	}
-	return false
 }
 
-func (n *fsNode) addFile(name string) bool {
+func (n *fsNode) addFile(name string) {
 	if _, exists := n.childNamed(name); !exists {
-		n.children = append(n.children,
-			&fsNode{name, nil})
-		return true
+		n.children = append(n.children, &fsNode{name, nil})
 	}
-	return false
 }
 
 func (n *fsNode) String() string {
-	str := n.name + "/"
+	s := n.name
 	if n.children != nil {
-		for _, child := range n.children {
-			str += strings.Replace("\n"+child.String(),
-				"\n", "\n\t", -1)
+		s += "/"
+
+		names := make([]string, len(n.children))
+		for i, c := range n.children {
+			names[i] = c.name
+		}
+
+		sort.Strings(names)
+		for _, name := range names {
+			c, _ := n.childNamed(name)
+			s += strings.Replace("\n"+c.String(), "\n", "\n\t", -1)
 		}
 	}
-	return str
+	return s
 }
 
-func parseInclsFile(path string) (*fsNode, error) {
+func ParseInclsFile(path string) (*fsNode, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, 0666)
 	if err != nil {
 		return nil, err
@@ -114,14 +117,12 @@ func parseIncls(reader io.Reader) (*fsNode, error) {
 			return nil, fmt.Errorf("Empty name in %s/", curDir.name)
 		} else if name[len(name)-1] == inclDirSep {
 			d := name[:len(name)-1]
-			if !curDir.addDir(d) {
-				return nil, fmt.Errorf("Repeated name '%s'", d)
-			}
+			curDir.addDir(d)
 			dir, _ := curDir.childNamed(d)
 			nodePath = append(nodePath, dir)
 			enterDir = true
-		} else if !curDir.addFile(name) {
-			return nil, fmt.Errorf("Repeated name '%s'", name)
+		} else {
+			curDir.addFile(name)
 		}
 
 		if err == io.EOF {

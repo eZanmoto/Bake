@@ -24,7 +24,7 @@ func (p *Project) GenTo(dest string) error {
 
 	langRoot := path.Join(templPath, p.lang)
 
-	incls, err := parseInclsFile(path.Join(langRoot, baseInclFile))
+	incls, err := ParseInclsFile(path.Join(langRoot, baseInclFile))
 	if err != nil {
 		return err
 	}
