@@ -22,7 +22,7 @@ func main() {
 	}
 
 	fname := os.Args[1]
-	node, err := proj.ParseInclsFile(fname)
+	node, err := proj.ParseInclFiles(fname)
 
 	if err != nil {
 		fmt.Printf("Error parsing '%s': %v", fname, err)

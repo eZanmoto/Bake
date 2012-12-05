@@ -13,9 +13,23 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 )
 
+type stringSlice []string
+
+func (s *stringSlice) String() string {
+	return "[" + strings.Join(*s, ", ") + "]"
+}
+
+func (s *stringSlice) Set(v string) error {
+	*s = append(*s, v)
+	return nil
+}
+
 var (
+	types stringSlice
+
 	verbose = flag.Bool("v", false, "Print extra progress information")
 
 	helpArgs = map[*bool]func(){
@@ -38,6 +52,8 @@ var (
 )
 
 func main() {
+	flag.Var(&types, "t", "The project's types")
+
 	parseFlags()
 
 	exists, err := langExists(*lang)
@@ -51,8 +67,9 @@ func main() {
 	}
 
 	vars := map[string]string{
-		"ProjectName": *name,
-		"Owner":       *owner,
+		"ProjectName":      *name,
+		"ProjectNameLower": strings.ToLower(*name),
+		"Owner":            *owner,
 	}
 
 	for argName, argVal := range optionalArgs {
@@ -61,12 +78,10 @@ func main() {
 		}
 	}
 
-	p := proj.New(*lang, *verbose, vars)
-
-	err = p.GenTo("")
-
-	if err != nil {
-		fmt.Println(err)
+	p := proj.New(*lang, types, *verbose, vars)
+	if err = p.GenTo(""); err != nil {
+		fmt.Fprintf(os.Stderr, "%s", err)
+		os.Exit(1)
 	}
 }
 
@@ -82,7 +97,7 @@ func parseFlags() {
 
 	for argName, argVal := range requiredArgs {
 		if *argVal == "" {
-			fmt.Fprintf(os.Stderr, "-"+argName+" is required\n")
+			fmt.Fprintf(os.Stderr, "-%s is required\n", argName)
 			flag.Usage()
 			os.Exit(2)
 		}

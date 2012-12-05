@@ -5,6 +5,7 @@
 package proj
 
 import (
+	"io"
 	"strings"
 	"testing"
 )
@@ -136,9 +137,9 @@ var (
 	}
 )
 
-func TestReadIncls(t *testing.T) {
+func TestReadIncl(t *testing.T) {
 	for _, test := range inclTests {
-		result, err := parseIncls(strings.NewReader(test.source))
+		result, err := parseIncl(strings.NewReader(test.source))
 		if err != nil {
 			t.Errorf("Failed: %v", err)
 		} else if !result.equals(test.expected) {
@@ -147,6 +148,14 @@ func TestReadIncls(t *testing.T) {
 				result.String())
 		}
 	}
+}
+
+func parseIncl(reader io.Reader) (*fsNode, error) {
+	n := newRootDir()
+	if err := n.addIncl(reader); err != nil {
+		return nil, err
+	}
+	return n, nil
 }
 
 func (n *fsNode) equals(m *fsNode) bool {
@@ -175,6 +184,12 @@ func (n *fsNode) equals(m *fsNode) bool {
 
 func TestEmptyDirFail(t *testing.T) {
 	expectFail(t, ""+
+		"a/\n")
+
+	expectFail(t, ""+
+		"a/")
+
+	expectFail(t, ""+
 		"a/\n"+
 		"b\n")
 
@@ -184,7 +199,7 @@ func TestEmptyDirFail(t *testing.T) {
 }
 
 func expectFail(t *testing.T, src string) {
-	if result, err := parseIncls(strings.NewReader(src)); err == nil {
+	if result, err := parseIncl(strings.NewReader(src)); err == nil {
 		t.Errorf("Expected failure parsing:\n%s\nGot:\n%s", src, result)
 	}
 }
@@ -197,4 +212,34 @@ func TestBadIndentation(t *testing.T) {
 	expectFail(t, ""+
 		"a/\n"+
 		"\t\tb")
+}
+
+func TestAddIncl(t *testing.T) {
+	n := newRootDir()
+	sources := []string{
+		"a/\n\tb/\n\t\tc\n",
+		"a/\n\tb/\n\t\td\n",
+		"a/\n\te/\n\t\tf\n",
+	}
+	expect := &fsNode{"", []*fsNode{
+		{"a", []*fsNode{
+			{"b", []*fsNode{
+				{"c", nil},
+				{"d", nil},
+			}},
+			{"e", []*fsNode{
+				{"f", nil},
+			}},
+		}},
+	}}
+
+	for _, source := range sources {
+		if err := n.addIncl(strings.NewReader(source)); err != nil {
+			t.Errorf("Failed: %v", err)
+		}
+	}
+
+	if !expect.equals(n) {
+		t.Errorf("Expected:\n%s\nGot:\n%s", expect.String(), n.String())
+	}
 }

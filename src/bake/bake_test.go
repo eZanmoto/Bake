@@ -156,7 +156,7 @@ func readLines(in io.Reader) (string, error) {
 func TestGenProjDir(t *testing.T) {
 	dir := os.TempDir()
 	if err := os.Chdir(dir); err != nil {
-		t.Fatalf("Error changing directory: %v", err)
+		t.Fatalf("Error changing to directory: %v", err)
 	}
 
 	nameGen := perm.NewStringPermuter("abc")
@@ -179,8 +179,9 @@ func TestGenProjDir(t *testing.T) {
 	}
 }
 
-func bake(t *testing.T, name, owner, lang string) {
-	cmd, _, errput := runBake(t, "-n", name, "-o", owner, "-l", lang)
+func bake(t *testing.T, name, owner, lang string, xs ...string) {
+	args := append(xs, "-n", name, "-o", owner, "-l", lang)
+	cmd, _, errput := runBake(t, args...)
 
 	if len(errput) != 0 {
 		t.Fatalf("stderr was not empty: %s", errput)
@@ -188,5 +189,40 @@ func bake(t *testing.T, name, owner, lang string) {
 
 	if !cmd.ProcessState.Success() {
 		t.Fatalf("bake exited with error")
+	}
+}
+
+func TestGenProjType(t *testing.T) {
+	dir := os.TempDir()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("Error changing to directory: %v", err)
+	}
+
+	name := "example"
+
+	// Test without -t bin
+	if e := os.RemoveAll(name); e != nil && !os.IsNotExist(e) {
+		t.Fatalf("Error removing '%s': %v", name, e)
+	}
+
+	bake(t, name, "owner", "go")
+
+	fname := path.Join(name, "src", strings.ToLower(name)+".go")
+	if _, err := os.Stat(fname); err == nil || !os.IsNotExist(err) {
+		t.Fatalf("File '%s' should not exist: %v", fname, err)
+	}
+
+	// Test with -t bin
+	if e := os.RemoveAll(name); e != nil && !os.IsNotExist(e) {
+		t.Fatalf("Error removing '%s': %v", name, e)
+	}
+
+	bake(t, name, "owner", "go", "-t", "bin")
+
+	fname = path.Join(name, "src", strings.ToLower(name)+".go")
+	if fi, err := os.Stat(fname); err != nil {
+		t.Fatalf("File '%s' should exist: %v", fname, err)
+	} else if fi.IsDir() {
+		t.Errorf("Expected '%s' to be a file", fname)
 	}
 }
