@@ -8,14 +8,7 @@
 # on multiple platforms, which makes it as good as an interpreted programming
 # language for the purpose of this script.
 
-# Test build
-./build.sh
-if [ $? -ne 0 ]
-then
-    exit 1
-fi
-
-# Commit
+# Check arguments
 if [ $# -ne 1 ]
 then
 	echo "\n$0 expects commit message"
@@ -28,4 +21,12 @@ then
 	exit 1
 fi
 
+# Test build
+./build.sh
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
+
+# Commit
 git commit -m "$1"
