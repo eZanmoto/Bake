@@ -81,7 +81,7 @@ func main() {
 	p := proj.New(*lang, types, *verbose, vars)
 	if err = p.GenTo(""); err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
-		os.Exit(1)
+		os.Exit(2)
 	}
 }
 
