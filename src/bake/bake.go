@@ -58,10 +58,10 @@ func main() {
 
 	exists, err := langExists(*lang)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		fmt.Fprintf(os.Stderr, "%s", err.Error()+"\n")
 		os.Exit(2)
 	} else if !exists {
-		fmt.Fprintf(os.Stderr, "'"+*lang+"' is not a valid language\n")
+		fmt.Fprintf(os.Stderr, "'%s' is not a valid language\n", lang)
 		fmt.Fprintf(os.Stderr, "Use -languages to see valid options\n")
 		os.Exit(2)
 	}
@@ -120,11 +120,11 @@ func printLangs() {
 	langs, err := env.SupportedLangs()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error()+"\n")
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return
 	}
 
 	for _, lang := range langs {
-		fmt.Printf(lang + "\n")
+		fmt.Printf("%s\n", lang)
 	}
 }
