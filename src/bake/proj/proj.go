@@ -8,10 +8,11 @@ package proj
 
 type Project struct {
 	lang    string
+	types   []string
 	verbose bool
 	vars    map[string]string
 }
 
-func New(lang string, verbose bool, vars map[string]string) Project {
-	return Project{lang, verbose, vars}
+func New(lang string, types []string, v bool, vars map[string]string) Project {
+	return Project{lang, types, v, vars}
 }

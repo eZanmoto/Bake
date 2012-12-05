@@ -24,13 +24,24 @@ func (p *Project) GenTo(dest string) error {
 
 	langRoot := path.Join(templPath, p.lang)
 
-	incls, err := ParseInclsFile(path.Join(langRoot, baseInclFile))
+	filePaths := joinAll(langRoot, append(p.types, baseInclFile))
+	incls, err := ParseInclFiles(filePaths...)
 	if err != nil {
 		return err
 	}
 	incls.name = "{ProjectName}"
 
-	return p.genDirConts(&fsNode{"", []*fsNode{incls}}, langRoot, "")
+	fmt.Printf("Files:\n%s\n", incls)
+
+	return p.genDirConts(&fsNode{children: []*fsNode{incls}}, langRoot, "")
+}
+
+func joinAll(dir string, fnames []string) []string {
+	paths := fnames[0:]
+	for i, p := range paths {
+		paths[i] = path.Join(dir, p)
+	}
+	return paths
 }
 
 func (p *Project) genDirConts(dir *fsNode, srcDir, tgtDir string) error {

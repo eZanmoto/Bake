@@ -71,32 +71,43 @@ func (n *fsNode) String() string {
 	return s
 }
 
-func ParseInclsFile(path string) (*fsNode, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY, 0666)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+type NodePath []*fsNode
 
-	in := bufio.NewReader(file)
-	_, err = in.ReadString('\n') // Skip description
-	if err != nil {
-		return nil, err
+func ParseInclFiles(paths ...string) (*fsNode, error) {
+	root := newRootDir()
+
+	for _, path := range paths {
+		file, err := os.OpenFile(path, os.O_RDONLY, 0666)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		in := bufio.NewReader(file)
+
+		// Skip description
+		if _, err = in.ReadString('\n'); err != nil {
+			return nil, err
+		}
+
+		if err = root.addIncl(in); err != nil {
+			return nil, err
+		}
 	}
 
-	return parseIncls(in)
+	return root, nil
 }
 
-func parseIncls(reader io.Reader) (*fsNode, error) {
+func (n *fsNode) addIncl(reader io.Reader) error {
 	in := bufio.NewReader(reader)
-	nodePath := []*fsNode{{"", []*fsNode{}}}
+	nodePath := []*fsNode{n}
 	enterDir := false
 
 	for {
 		line, err := in.ReadString('\n')
 		if err != nil {
 			if err != io.EOF {
-				return nil, err
+				return err
 			}
 			if len(line) == 0 {
 				break
@@ -105,7 +116,7 @@ func parseIncls(reader io.Reader) (*fsNode, error) {
 
 		lvl := indentLvl(line)
 		if enterDir && lvl != len(nodePath)-1 || lvl >= len(nodePath) {
-			return nil, fmt.Errorf("Bad indentation: '%s'", line)
+			return fmt.Errorf("Bad indentation: '%s'", line)
 		} else {
 			nodePath = nodePath[:lvl+1]
 		}
@@ -114,7 +125,7 @@ func parseIncls(reader io.Reader) (*fsNode, error) {
 
 		name := strings.TrimRight(line, "\n")[lvl:]
 		if len(name) == 0 {
-			return nil, fmt.Errorf("Empty name in %s/", curDir.name)
+			return fmt.Errorf("Empty name in %s/", curDir.name)
 		} else if name[len(name)-1] == inclDirSep {
 			d := name[:len(name)-1]
 			curDir.addDir(d)
@@ -130,7 +141,15 @@ func parseIncls(reader io.Reader) (*fsNode, error) {
 		}
 	}
 
-	return nodePath[0], nil
+	if enterDir {
+		return fmt.Errorf("Expected dir contents, got EOF")
+	}
+
+	return nil
+}
+
+func newRootDir() *fsNode {
+	return &fsNode{"", []*fsNode{}}
 }
 
 func indentLvl(s string) int {

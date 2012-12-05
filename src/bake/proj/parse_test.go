@@ -20,7 +20,7 @@ func TestParseInsert(t *testing.T) {
 
 	for i := 0; i < numTests; i++ {
 		before, after := letters.Permute(), numbers.Permute()
-		p := &Project{"", false, map[string]string{before: after}}
+		p := &Project{vars: map[string]string{before: after}}
 		expectParse(t, p, before, before)
 		expectParse(t, p, "{"+before+"}", after)
 		expectParse(t, p, before+"{"+before+"}", before+after)
@@ -39,7 +39,7 @@ func expectParse(t *testing.T, p *Project, before, after string) {
 }
 
 func TestParseDoubleLBrace(t *testing.T) {
-	p := &Project{"", false, map[string]string{}}
+	p := &Project{}
 	letters := perm.NewStringPermuter("abc")
 
 	for i := 0; i < numTests; i++ {
@@ -51,7 +51,7 @@ func TestParseDoubleLBrace(t *testing.T) {
 }
 
 func TestParseMissingClose(t *testing.T) {
-	p := &Project{"", false, map[string]string{}}
+	p := &Project{}
 	letters := perm.NewStringPermuter("abc")
 
 	for i := 0; i < numTests; i++ {
@@ -69,7 +69,7 @@ func parseFail(t *testing.T, p *Project, value string) {
 }
 
 func TestParseDoubleRBrace(t *testing.T) {
-	p := &Project{"", false, map[string]string{}}
+	p := &Project{}
 	letters := perm.NewStringPermuter("abc")
 
 	for i := 0; i < numTests; i++ {
@@ -81,7 +81,7 @@ func TestParseDoubleRBrace(t *testing.T) {
 }
 
 func TestParseSingleRBrace(t *testing.T) {
-	p := &Project{"", false, map[string]string{}}
+	p := &Project{}
 	letters := perm.NewStringPermuter("abc")
 
 	for i := 0; i < numTests; i++ {
@@ -102,7 +102,7 @@ func TestParseVarDepsInc(t *testing.T) {
 		z := letters.Permute()
 		a, b := letters.Permute(), numbers.Permute()
 		c, d := letters.Permute(), numbers.Permute()
-		p := &Project{"", false, map[string]string{a: b, c: d}}
+		p := &Project{vars: map[string]string{a: b, c: d}}
 
 		expectParse(t, p,
 			fmt.Sprintf("%s{?%s:{%s}}%s", z, a, a, z),
