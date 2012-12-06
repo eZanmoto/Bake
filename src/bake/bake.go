@@ -9,9 +9,12 @@ package main
 import (
 	"bake/env"
 	"bake/proj"
+	"bufio"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"sort"
 	"strings"
 )
@@ -30,7 +33,8 @@ func (s *stringSlice) Set(v string) error {
 var (
 	types stringSlice
 
-	verbose = flag.Bool("v", false, "Print extra progress information")
+	verbose   = flag.Bool("v", false, "Print extra progress information")
+	langTypes = flag.String("T", "", "Print project types for language")
 
 	helpArgs = map[*bool]func(){
 		flag.Bool("L", false, "Print supported languages"): printLangs,
@@ -56,15 +60,7 @@ func main() {
 
 	parseFlags()
 
-	exists, err := langExists(*lang)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", err.Error()+"\n")
-		os.Exit(2)
-	} else if !exists {
-		fmt.Fprintf(os.Stderr, "'%s' is not a valid language\n", lang)
-		fmt.Fprintf(os.Stderr, "Use -languages to see valid options\n")
-		os.Exit(2)
-	}
+	validateLang(*lang)
 
 	vars := map[string]string{
 		"ProjectName":      *name,
@@ -79,7 +75,7 @@ func main() {
 	}
 
 	p := proj.New(*lang, types, *verbose, vars)
-	if err = p.GenTo(""); err != nil {
+	if err := p.GenTo(""); err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
 		os.Exit(2)
 	}
@@ -87,6 +83,12 @@ func main() {
 
 func parseFlags() {
 	flag.Parse()
+
+	if *langTypes != "" {
+		validateLang(*langTypes)
+		printTypesFor(*langTypes)
+		os.Exit(0)
+	}
 
 	for argVal, printFunc := range helpArgs {
 		if *argVal {
@@ -104,16 +106,65 @@ func parseFlags() {
 	}
 }
 
-func langExists(lang string) (bool, error) {
+func validateLang(lang string) {
 	langs, err := env.SupportedLangs()
 
 	if err != nil {
-		return false, err
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(2)
 	}
 
 	langsSlice := sort.StringSlice(langs)
 	langsSlice.Sort()
-	return langsSlice.Search(lang) != langsSlice.Len(), nil
+
+	if langsSlice.Search(lang) == langsSlice.Len() {
+		fmt.Fprintf(os.Stderr, "'%s' is not a valid language\n", lang)
+		fmt.Fprintf(os.Stderr, "Use -languages to see valid options\n")
+		os.Exit(2)
+	}
+}
+
+func printTypesFor(lang string) {
+	tmplDir, err := env.TemplatesPath()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(2)
+	}
+
+	langDir := path.Join(tmplDir, lang)
+
+	fis, err := ioutil.ReadDir(langDir)
+	if len(fis) <= 2 {
+		fmt.Fprintf(os.Stderr, "'%s' is not fully supported\n", lang)
+		os.Exit(2)
+	}
+
+	typeNames := make([]string, len(fis)-2)
+	i := 0
+	for _, fi := range fis {
+		name := fi.Name()
+		if name != "base" && name != "{ProjectName}" {
+			typeNames[i] = name
+			i++
+		}
+	}
+
+	for _, name := range typeNames {
+		file, err := os.Open(path.Join(langDir, name))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(2)
+		}
+		defer file.Close()
+
+		descr, err := bufio.NewReader(file).ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(2)
+		}
+
+		fmt.Printf("%s\t%s", name, descr)
+	}
 }
 
 func printLangs() {
