@@ -31,8 +31,6 @@ func (p *Project) GenTo(dest string) error {
 	}
 	incls.name = "{ProjectName}"
 
-	fmt.Printf("Files:\n%s\n", incls)
-
 	return p.genDirConts(&fsNode{children: []*fsNode{incls}}, langRoot, "")
 }
 
