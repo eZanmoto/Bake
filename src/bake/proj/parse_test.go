@@ -113,6 +113,10 @@ func TestParseVarDepsInc(t *testing.T) {
 			z+"\n"+b+"\n"+z)
 
 		expectParse(t, p,
+			fmt.Sprintf("%s\n{?x:\n{%s}\n}\n%s", z, a, z),
+			z+"\n"+z)
+
+		expectParse(t, p,
 			fmt.Sprintf("{?%s:%s{%s}%s}", z, a, a, z),
 			"")
 
