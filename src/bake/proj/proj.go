@@ -16,3 +16,12 @@ type Project struct {
 func New(lang string, types []string, v bool, vars map[string]string) Project {
 	return Project{lang, types, v, vars}
 }
+
+func (p *Project) IsOfType(t string) bool {
+	for _, val := range p.types {
+		if val == t {
+			return true
+		}
+	}
+	return false
+}

@@ -149,3 +149,25 @@ func TestParseVarDepsInc(t *testing.T) {
 			z+z)
 	}
 }
+
+func TestParseTypeDepsInc(t *testing.T) {
+	letters := perm.NewStringPermuter("abc")
+	numbers := perm.NewStringPermuter("012")
+
+	letters.Permute() // Skip empty string
+	numbers.Permute() // Skip empty string
+
+	for i := 0; i < numTests; i++ {
+		z := letters.Permute()
+		pType, val := letters.Permute(), numbers.Permute()
+		p := &Project{types: []string{pType}}
+
+		expectParse(t, p,
+			fmt.Sprintf("%s{!%s:%s}%s", z, pType, val, z),
+			z+val+z)
+
+		expectParse(t, p,
+			fmt.Sprintf("%s{!x:%s}%s", z, val, z),
+			z+z)
+	}
+}

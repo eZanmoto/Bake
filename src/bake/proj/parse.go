@@ -16,6 +16,7 @@ const (
 	lDelim        = '{' // Denotes the start of a template directive
 	rDelim        = '}' // Denotes the end of a template directive
 	varDepInc     = '?' // Denotes a variable-dependant include
+	typeDepInc    = '!' // Denotes a type-dependant include
 	depsListEnd   = ':' // Denotes the end of a list of dependencies
 	depsListDelim = '&' // Delimits elements in a dependency list
 )
@@ -105,6 +106,12 @@ func (p *Project) parseDirective(in *scanner.Scanner, out *bufio.Writer) error {
 	case varDepInc:
 		in.Next()
 		err = p.parseVarInc(in, out)
+		if in.Peek() == '\n' {
+			in.Next()
+		}
+	case typeDepInc:
+		in.Next()
+		err = p.parseTypeInc(in, out)
 		if in.Peek() == '\n' {
 			in.Next()
 		}
@@ -299,4 +306,88 @@ func parseErr(stream *scanner.Scanner, text string, a ...interface{}) error {
 	p := stream.Pos()
 	text = fmt.Sprintf(text, a...)
 	return fmt.Errorf("%s[%d:%d] %s", p.Filename, p.Line, p.Column, text)
+}
+
+func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
+	typeDeps, err := readDepsList(in)
+	if err != nil {
+		return err
+	}
+
+	allRecognized := true
+	for _, name := range typeDeps {
+		if !p.IsOfType(name) {
+			allRecognized = false
+			break
+		}
+	}
+
+	if !allRecognized {
+		return p.exitDirective(in)
+	}
+
+	if in.Peek() == '\n' {
+		in.Next()
+	}
+
+	for in.Peek() != scanner.EOF {
+		assignedChar := false
+		var char rune
+
+		switch in.Peek() {
+		case lDelim:
+			in.Next()
+			if in.Peek() == lDelim {
+				in.Next()
+				assignedChar, char = true, lDelim
+			} else {
+				err := p.parseInsert(in, out)
+
+				if err != nil {
+					return err
+				}
+			}
+		case rDelim:
+			in.Next()
+			if in.Peek() == rDelim {
+				in.Next()
+				assignedChar, char = true, rDelim
+			} else {
+				break
+			}
+		case scanner.EOF:
+			break
+		case '\n':
+			in.Next()
+			if in.Peek() == rDelim {
+				in.Next()
+				if in.Peek() == rDelim {
+					in.Next()
+					assignedChar, char = true, rDelim
+				} else {
+					break
+				}
+			} else {
+				assignedChar, char = true, '\n'
+			}
+		default:
+			assignedChar, char = true, in.Next()
+		}
+
+		if assignedChar {
+			if n, err := out.WriteRune(char); n < 1 {
+				return fmt.Errorf("Couldn't write: %v", err)
+			} else if err != nil {
+				return err
+			}
+		}
+
+		if out.Available() < 1 {
+			if err := out.Flush(); err != nil {
+				return err
+			}
+		}
+	}
+
+	return out.Flush()
 }
