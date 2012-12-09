@@ -1,4 +1,4 @@
-// Copyright {?Year:{Year} }{Owner}. All rights reserved.
+// Copyright {Year} {Owner}. All rights reserved.
 {?License:
 // Use of this source code is governed by a {License}
 // license that can be found in the LICENSE file.

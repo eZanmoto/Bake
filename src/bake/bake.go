@@ -17,6 +17,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 )
 
 type stringSlice []string
@@ -62,12 +63,7 @@ func main() {
 
 	validateLang(*lang)
 
-	vars := map[string]string{
-		"ProjectName":      *name,
-		"ProjectNameLower": strings.ToLower(*name),
-		"Owner":            *owner,
-	}
-
+	vars := makeProjVars()
 	for argName, argVal := range optionalArgs {
 		if *argVal != "" {
 			vars[argName] = *argVal
@@ -78,6 +74,15 @@ func main() {
 	if err := p.GenTo(""); err != nil {
 		fmt.Fprintf(os.Stderr, "%s", err)
 		os.Exit(2)
+	}
+}
+
+func makeProjVars() map[string]string {
+	return map[string]string{
+		"ProjectName":      *name,
+		"ProjectNameLower": strings.ToLower(*name),
+		"Owner":            *owner,
+		"Year":             string(time.Now().Year()),
 	}
 }
 
