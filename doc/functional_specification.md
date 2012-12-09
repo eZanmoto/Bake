@@ -178,8 +178,8 @@ This is a list of project variables that you can use in templates that should
 always be present. Variables are case-sensitive.
 
 + Owner
-+ LowercaseProjectName
 + ProjectName
++ ProjectNameLower
 
 #### Variable-Dependent Includes
 
