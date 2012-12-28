@@ -1,0 +1,3 @@
+# Default behaviour to handle all files as text, as bake doesn't have binary
+# files currently.
+* text
