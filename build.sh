@@ -8,42 +8,35 @@
 # on multiple platforms, which makes it as good as an interpreted programming
 # language for the purpose of this script.
 
+# Fails this script if the last command wasn't successful.
+exitOnFailure() {
+	if [ $? -ne 0 ]
+	then
+		exit 1
+	fi
+}
+
 # Clean
 go clean
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+exitOnFailure
 
 # Extra build checks
 go tool vet src
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+exitOnFailure
 
 # Build
 go install bake
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+exitOnFailure
 
 go install fmtincl
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+exitOnFailure
 
 # Run tests
 for PROJ in tests/perm bake bake/proj
 do
 	go test -i $PROJ
 	go test $PROJ
-	if [ $? -ne 0 ]
-	then
-		exit 1
-	fi
+	exitOnFailure
 done
 
 # Check formatting
