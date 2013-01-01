@@ -56,7 +56,10 @@ func (p *Project) parse(reader io.Reader, writer io.Writer) error {
 		switch in.Peek() {
 		case lDelim:
 			in.Next()
-			if in.Peek() == lDelim {
+			if in.Peek() == scanner.EOF {
+				return parseErr(&in, "Got EOF after '%c'",
+					lDelim)
+			} else if in.Peek() == lDelim {
 				in.Next()
 				assignedChar, char = true, lDelim
 			} else {
@@ -68,15 +71,16 @@ func (p *Project) parse(reader io.Reader, writer io.Writer) error {
 			}
 		case rDelim:
 			in.Next()
-			if c := in.Peek(); c == rDelim {
+			if in.Peek() == scanner.EOF {
+				return parseErr(&in, "Got EOF after '%c'",
+					rDelim)
+			} else if in.Peek() == rDelim { // '}' literal
 				in.Next()
 				assignedChar, char = true, rDelim
 			} else {
-				return parseErr(&in, "Expected '%c', got '%c'",
-					rDelim, c)
+				return parseErr(&in, "Encountered single '%c'",
+					rDelim)
 			}
-		case scanner.EOF:
-			break
 		default:
 			assignedChar, char = true, in.Next()
 		}
@@ -85,12 +89,6 @@ func (p *Project) parse(reader io.Reader, writer io.Writer) error {
 			if n, err := out.WriteRune(char); n < 1 {
 				return fmt.Errorf("Couldn't write: %v", err)
 			} else if err != nil {
-				return err
-			}
-		}
-
-		if out.Available() < 1 {
-			if err := out.Flush(); err != nil {
 				return err
 			}
 		}
@@ -106,9 +104,6 @@ func (p *Project) parseDirective(in *scanner.Scanner, out *bufio.Writer) error {
 	case varDepInc:
 		in.Next()
 		err = p.parseVarInc(in, out)
-		if in.Peek() == '\n' {
-			in.Next()
-		}
 	case typeDepInc:
 		in.Next()
 		err = p.parseTypeInc(in, out)
@@ -169,16 +164,24 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 			} else {
 				break
 			}
-		case scanner.EOF:
-			break
 		case '\n':
 			in.Next()
 			if in.Peek() == rDelim {
 				in.Next()
+
+				if n, err := out.WriteRune('\n'); n < 1 {
+					return fmt.Errorf("Couldn't write: %v", err)
+				} else if err != nil {
+					return err
+				}
+
 				if in.Peek() == rDelim {
 					in.Next()
 					assignedChar, char = true, rDelim
 				} else {
+					if in.Peek() == '\n' {
+						in.Next()
+					}
 					break
 				}
 			} else {
@@ -192,12 +195,6 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 			if n, err := out.WriteRune(char); n < 1 {
 				return fmt.Errorf("Couldn't write: %v", err)
 			} else if err != nil {
-				return err
-			}
-		}
-
-		if out.Available() < 1 {
-			if err := out.Flush(); err != nil {
 				return err
 			}
 		}
@@ -253,6 +250,16 @@ func (p *Project) exitDirective(in *scanner.Scanner) error {
 				in.Next()
 			}
 			p.parseInsert(in, stdnilbuf)
+		} else if next == '\n' && in.Peek() == rDelim {
+			in.Next()
+			if in.Peek() == rDelim {
+				in.Next()
+			} else {
+				if in.Peek() == '\n' {
+					in.Next()
+				}
+				finished = true
+			}
 		} else if next == rDelim {
 			if in.Peek() == rDelim {
 				in.Next()
@@ -355,16 +362,24 @@ func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
 			} else {
 				break
 			}
-		case scanner.EOF:
-			break
 		case '\n':
 			in.Next()
 			if in.Peek() == rDelim {
 				in.Next()
+
+				if n, err := out.WriteRune('\n'); n < 1 {
+					return fmt.Errorf("Couldn't write: %v", err)
+				} else if err != nil {
+					return err
+				}
+
 				if in.Peek() == rDelim {
 					in.Next()
 					assignedChar, char = true, rDelim
 				} else {
+					if in.Peek() == '\n' {
+						in.Next()
+					}
 					break
 				}
 			} else {
@@ -378,12 +393,6 @@ func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
 			if n, err := out.WriteRune(char); n < 1 {
 				return fmt.Errorf("Couldn't write: %v", err)
 			} else if err != nil {
-				return err
-			}
-		}
-
-		if out.Available() < 1 {
-			if err := out.Flush(); err != nil {
 				return err
 			}
 		}

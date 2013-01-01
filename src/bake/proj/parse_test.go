@@ -5,7 +5,6 @@
 package proj
 
 import (
-	"fmt"
 	"testing"
 	"tests/perm"
 )
@@ -92,82 +91,37 @@ func TestParseSingleRBrace(t *testing.T) {
 }
 
 func TestParseVarDepsInc(t *testing.T) {
-	letters := perm.NewStringPermuter("abc")
-	numbers := perm.NewStringPermuter("012")
+	p := &Project{vars: map[string]string{"y": "!"}}
 
-	letters.Permute() // Skip empty string
-	numbers.Permute() // Skip empty string
+	expectParse(t, p, "a{?y:{y}}b", "a!b")
+	expectParse(t, p, "a\n{?y:{y}}b", "a\n!b")
+	expectParse(t, p, "a\n{?y:\n{y}}b", "a\n!b")
+	expectParse(t, p, "a{?y:\n{y}}b", "a!b")
+	expectParse(t, p, "a\n{?y:\n{y}\n}b", "a\n!\nb")
+	expectParse(t, p, "a\n{?y:\n{y}\n}\nb", "a\n!\nb")
 
-	for i := 0; i < numTests; i++ {
-		z := letters.Permute()
-		a, b := letters.Permute(), numbers.Permute()
-		c, d := letters.Permute(), numbers.Permute()
-		p := &Project{vars: map[string]string{a: b, c: d}}
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{?%s:{%s}}%s", z, a, a, z),
-			z+b+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("%s\n{?%s:\n{%s}\n}\n%s", z, a, a, z),
-			z+"\n"+b+"\n"+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("%s\n{?x:\n{%s}\n}\n%s", z, a, z),
-			z+"\n"+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("{?%s:%s{%s}%s}", z, a, a, z),
-			"")
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{?x:{%s}}%s", z, a, z),
-			z+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{?x:{%s}%s}", z, a, z),
-			z)
-
-		expectParse(t, p,
-			fmt.Sprintf("{?x:%s{%s}}%s", z, a, z),
-			z)
-
-		expectParse(t, p,
-			fmt.Sprintf("{?x:%s{%s}%s}", z, a, z),
-			"")
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{?%s&%s:{%s}{%s}}%s", z, a, c, a, c, z),
-			z+b+d+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{?x&%s:{x}{%s}}%s", z, a, a, z),
-			z+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{?%s&x:{%s}{x}}%s", z, a, a, z),
-			z+z)
-	}
+	expectParse(t, p, "a{?x:{x}}b", "ab")
+	expectParse(t, p, "a\n{?x:{x}}b", "a\nb")
+	expectParse(t, p, "a\n{?x:\n{x}}b", "a\nb")
+	expectParse(t, p, "a{?x:\n{x}}b", "ab")
+	expectParse(t, p, "a\n{?x:\n{x}\n}b", "a\nb")
+	expectParse(t, p, "a\n{?x:\n{x}\n}\nb", "a\nb")
 }
 
 func TestParseTypeDepsInc(t *testing.T) {
-	letters := perm.NewStringPermuter("abc")
-	numbers := perm.NewStringPermuter("012")
+	p := &Project{types: []string{"y"}}
 
-	letters.Permute() // Skip empty string
-	numbers.Permute() // Skip empty string
+	expectParse(t, p, "a{!y:y}b", "ayb")
+	expectParse(t, p, "a\n{!y:y}b", "a\nyb")
+	expectParse(t, p, "a\n{!y:\ny}b", "a\nyb")
+	expectParse(t, p, "a{!y:\ny}b", "ayb")
+	expectParse(t, p, "a\n{!y:\ny\n}b", "a\ny\nb")
+	expectParse(t, p, "a\n{!y:\ny\n}\nb", "a\ny\nb")
 
-	for i := 0; i < numTests; i++ {
-		z := letters.Permute()
-		pType, val := letters.Permute(), numbers.Permute()
-		p := &Project{types: []string{pType}}
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{!%s:%s}%s", z, pType, val, z),
-			z+val+z)
-
-		expectParse(t, p,
-			fmt.Sprintf("%s{!x:%s}%s", z, val, z),
-			z+z)
-	}
+	expectParse(t, p, "a{!x:x}b", "ab")
+	expectParse(t, p, "a\n{!x:x}b", "a\nb")
+	expectParse(t, p, "a\n{!x:\nx}b", "a\nb")
+	expectParse(t, p, "a{!x:\nx}b", "ab")
+	expectParse(t, p, "a\n{!x:\nx\n}b", "a\nb")
+	expectParse(t, p, "a\n{!x:\nx\n}\nb", "a\nb")
 }
