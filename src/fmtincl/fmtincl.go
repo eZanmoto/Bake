@@ -25,7 +25,7 @@ func main() {
 	node, err := proj.ParseInclFiles(fname)
 
 	if err != nil {
-		fmt.Printf("Error parsing '%s': %v", fname, err)
+		fmt.Fprintf(os.Stderr, "Error parsing '%s': %v\n", fname, err)
 		os.Exit(2)
 	}
 

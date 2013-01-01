@@ -126,7 +126,9 @@ func (n *fsNode) addIncl(reader io.Reader) error {
 		name := strings.TrimRight(line, "\n")[lvl:]
 		if len(name) == 0 {
 			return fmt.Errorf("Empty name in %s/", curDir.name)
-		} else if name[len(name)-1] == inclDirSep {
+		} else if !isValidFsName(name) {
+			return fmt.Errorf("%s is not a valid name", name)
+		} else if isDirName(name) {
 			d := name[:len(name)-1]
 			curDir.addDir(d)
 			dir, _ := curDir.childNamed(d)
@@ -146,6 +148,19 @@ func (n *fsNode) addIncl(reader io.Reader) error {
 	}
 
 	return nil
+}
+
+func isDirName(d string) bool {
+	return d[len(d)-1] == inclDirSep
+}
+
+func isValidFsName(n string) bool {
+	for i := 0; i < len(n)-1; i++ {
+		if n[i] == inclDirSep {
+			return false
+		}
+	}
+	return true
 }
 
 func newRootDir() *fsNode {

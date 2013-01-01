@@ -20,26 +20,10 @@ exitOnFailure() {
 go clean
 exitOnFailure
 
-# Extra build checks
-go tool vet src
-exitOnFailure
-
-# Build
-go install bake
-exitOnFailure
-
+# Check formatting
 go install fmtincl
 exitOnFailure
 
-# Run tests
-for PROJ in tests/perm bake bake/proj
-do
-	go test -i $PROJ
-	go test $PROJ
-	exitOnFailure
-done
-
-# Check formatting
 FMT=$(gofmt -d -s src)
 if [ "$FMT" != "" ]
 then
@@ -84,14 +68,36 @@ do
 			fi
 
 			fmtincl $INCL >> $INCL.fmt
-			diff $INCL $INCL.fmt >/dev/null
-			if [ $? -ne 0 ]
+			if [ $? -eq 0 ]
 			then
-				echo "Formatting '$INCL'..."
-				mv $INCL.fmt $INCL
+				diff $INCL $INCL.fmt >/dev/null
+				if [ $? -eq 0 ]
+				then
+					rm $INCL.fmt
+				else
+					echo "Formatting '$INCL'..."
+					mv $INCL.fmt $INCL
+				fi
 			else
 				rm $INCL.fmt
+				exit 1
 			fi
 		fi
 	done
+done
+
+# Extra build checks
+go tool vet src
+exitOnFailure
+
+# Build
+go install bake
+exitOnFailure
+
+# Run tests
+for PROJ in tests/perm bake bake/proj
+do
+	go test -i $PROJ
+	go test $PROJ
+	exitOnFailure
 done
