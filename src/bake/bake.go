@@ -16,6 +16,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -82,7 +83,7 @@ func makeProjVars() map[string]string {
 		"ProjectName":      *name,
 		"ProjectNameLower": strings.ToLower(*name),
 		"Owner":            *owner,
-		"Year":             string(time.Now().Year()),
+		"Year":             strconv.Itoa(time.Now().Year()),
 	}
 }
 
