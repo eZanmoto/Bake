@@ -22,7 +22,14 @@ then
 fi
 
 # Test build
-./build.sh
+make build
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
+
+# Run test suite
+make runtests
 if [ $? -ne 0 ]
 then
     exit 1
