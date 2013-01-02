@@ -25,15 +25,18 @@ fi
 make build
 if [ $? -ne 0 ]
 then
-    exit 1
+	exit 1
 fi
 
-# Run test suite
-make runtests
-if [ $? -ne 0 ]
-then
-    exit 1
-fi
+# Run tests
+for TEST in tests/perm bake bake/proj
+do
+	go test $TEST
+	if [ $? -ne 0 ]
+	then
+		exit 1
+	fi
+done
 
 # Commit
 git commit -m "$1"
