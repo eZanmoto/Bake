@@ -9,12 +9,13 @@ A simple project generator.
 Usage
 -----
 
-Run
+Update GOPATH with a path to the Bake directory. Run `make` to install `bake` to
+Bake/bin.
 
-    go install bake
+    make
 
-This installs the bake executable. You must then set the BAKE environment
-variable to point to the bin directory that the executable was installed to.
-Then, to view usage information, run
+Create a BAKE environment variable which is set to the path of the Bake
+directory, and update your PATH to include the Bake/bin directory. Run the
+following for usage information, and to ensure that it is running correctly.
 
     bake -h
