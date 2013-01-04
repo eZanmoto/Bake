@@ -31,6 +31,7 @@ fi
 # Run tests
 for TEST in tests/perm bake bake/proj
 do
+	go test -i $TEST
 	go test $TEST
 	if [ $? -ne 0 ]
 	then

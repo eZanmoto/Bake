@@ -55,6 +55,7 @@ $(PKGDIR):
 
 runtests: build $(TESTS)
 	@for TEST in $(TESTS); do \
+		go test -i $$TEST; \
 		go test $$TEST; \
 	done
 
