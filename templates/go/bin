@@ -1,3 +1,4 @@
 Produces an executable
 src/
-	{ProjectNameLower}.go
+	{ProjectNameLower}/
+		{ProjectNameLower}.go

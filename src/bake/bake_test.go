@@ -219,7 +219,10 @@ func TestGenProjType(t *testing.T) {
 
 	bake(t, name, "owner", "go", "-t", "bin")
 
-	fname = path.Join(name, "src", strings.ToLower(name)+".go")
+	fname = path.Join(name,
+		"src",
+		strings.ToLower(name),
+		strings.ToLower(name)+".go")
 	if fi, err := os.Stat(fname); err != nil {
 		t.Fatalf("File '%s' should exist: %v", fname, err)
 	} else if fi.IsDir() {

@@ -4,6 +4,14 @@
 // license that can be found in the LICENSE file.
 }
 
-// Package main provides the entry point to the {ProjectNameLower} executable.
-
 package main
+
+import (
+	"testing"
+)
+
+func BasicTest(t *testing.T) {{
+	if 1 == 2 {{
+		t.Fatalf("Something is very wrong")
+	}}
+}}
