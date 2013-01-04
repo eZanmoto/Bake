@@ -234,6 +234,33 @@ is:
         gcc src/{ProjectName}.c -o build/{ProjectName}.o
     }
 
+#### Whitespace in Directives
+
+If extra whitespace is to be included in directives to potentially separate it
+from earlier/later text, it should be placed at the *start* of the directive.
+Take the following snippets of code as examples. The following demonstrates
+inline includes.
+
+        .PHONY:{!bin: all build}{!test: test} clean
+
+The next snippet demonstrates multi-line includes.
+
+        {!bin:
+
+        all: build
+
+        build:
+                $(COMPILER) {ProjectNameLower}
+        }
+        {!test:
+
+        test:
+                $(COMPILER) -t {ProjectNameLower}
+        }
+
+        clean:
+                rm -rf *.o
+
 ### Project Types
 
 The type of project to be generated is supplied to bake using the `--type` or
