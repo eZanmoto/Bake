@@ -107,9 +107,6 @@ func (p *Project) parseDirective(in *scanner.Scanner, out *bufio.Writer) error {
 	case typeDepInc:
 		in.Next()
 		err = p.parseTypeInc(in, out)
-		if in.Peek() == '\n' {
-			in.Next()
-		}
 	default:
 		err = p.parseInsert(in, out)
 	}
