@@ -15,7 +15,7 @@
 FMT=$(gofmt -d -s src)
 if [ "$FMT" != "" ]
 then
-	"$FMT" | tr \n \\n | less
+	echo "$FMT" | less
 
 	APPLY=
 	while [ "$APPLY" = "" ]
