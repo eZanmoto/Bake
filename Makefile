@@ -35,7 +35,7 @@ TESTS=tests/perm bake bake/proj
 all: clean build
 
 build: vet fmt
-	$(GO) install bake
+	$(GO) install $(TARGET)
 
 tests: build $(patsubst %,$(TSTDIR)/%.test,$(TESTS))
 	echo source $(GOROOT)/src/pkg/runtime/runtime-gdb.py > $(TSTDIR)/.gdbinit
