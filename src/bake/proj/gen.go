@@ -35,7 +35,8 @@ func (p *Project) GenTo(dest string) error {
 }
 
 func joinAll(dir string, fnames []string) []string {
-	paths := fnames[0:]
+	paths := make([]string, len(fnames))
+	copy(paths, fnames)
 	for i, p := range paths {
 		paths[i] = path.Join(dir, p)
 	}
