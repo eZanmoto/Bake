@@ -99,6 +99,7 @@ func TestParseVarDepsInc(t *testing.T) {
 	expectParse(t, p, "a{?y:\n{y}}b", "a!b")
 	expectParse(t, p, "a\n{?y:\n{y}\n}b", "a\n!\nb")
 	expectParse(t, p, "a\n{?y:\n{y}\n}\nb", "a\n!\nb")
+	expectParse(t, p, "a\n{?y:\n{y}\n}\n\nb", "a\n!\n\nb")
 
 	expectParse(t, p, "a{?x:{x}}b", "ab")
 	expectParse(t, p, "a\n{?x:{x}}b", "a\nb")
@@ -106,6 +107,7 @@ func TestParseVarDepsInc(t *testing.T) {
 	expectParse(t, p, "a{?x:\n{x}}b", "ab")
 	expectParse(t, p, "a\n{?x:\n{x}\n}b", "a\nb")
 	expectParse(t, p, "a\n{?x:\n{x}\n}\nb", "a\nb")
+	expectParse(t, p, "a\n{?x:\n{x}\n}\n\nb", "a\n\nb")
 }
 
 func TestParseTypeDepsInc(t *testing.T) {
@@ -117,6 +119,7 @@ func TestParseTypeDepsInc(t *testing.T) {
 	expectParse(t, p, "a{!y:\ny}b", "ayb")
 	expectParse(t, p, "a\n{!y:\ny\n}b", "a\ny\nb")
 	expectParse(t, p, "a\n{!y:\ny\n}\nb", "a\ny\nb")
+	expectParse(t, p, "a\n{!y:\ny\n}\n\nb", "a\ny\n\nb")
 
 	expectParse(t, p, "a{!x:x}b", "ab")
 	expectParse(t, p, "a\n{!x:x}b", "a\nb")
@@ -124,4 +127,5 @@ func TestParseTypeDepsInc(t *testing.T) {
 	expectParse(t, p, "a{!x:\nx}b", "ab")
 	expectParse(t, p, "a\n{!x:\nx\n}b", "a\nb")
 	expectParse(t, p, "a\n{!x:\nx\n}\nb", "a\nb")
+	expectParse(t, p, "a\n{!x:\nx\n}\n\nb", "a\n\nb")
 }
