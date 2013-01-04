@@ -136,7 +136,8 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 		in.Next()
 	}
 
-	for in.Peek() != scanner.EOF {
+	finished := false
+	for in.Peek() != scanner.EOF && !finished {
 		assignedChar := false
 		var char rune
 
@@ -159,7 +160,7 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 				in.Next()
 				assignedChar, char = true, rDelim
 			} else {
-				break
+				finished = true
 			}
 		case '\n':
 			in.Next()
@@ -179,7 +180,7 @@ func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
 					if in.Peek() == '\n' {
 						in.Next()
 					}
-					break
+					finished = true
 				}
 			} else {
 				assignedChar, char = true, '\n'
@@ -334,7 +335,8 @@ func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
 		in.Next()
 	}
 
-	for in.Peek() != scanner.EOF {
+	finished := false
+	for in.Peek() != scanner.EOF && !finished {
 		assignedChar := false
 		var char rune
 
@@ -357,7 +359,7 @@ func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
 				in.Next()
 				assignedChar, char = true, rDelim
 			} else {
-				break
+				finished = true
 			}
 		case '\n':
 			in.Next()
@@ -377,7 +379,7 @@ func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
 					if in.Peek() == '\n' {
 						in.Next()
 					}
-					break
+					finished = true
 				}
 			} else {
 				assignedChar, char = true, '\n'
