@@ -35,6 +35,10 @@ TESTS=tests/perm bake bake/proj
 all: clean build
 
 build: vet fmt
+	@case $$GOPATH: in \
+		*/Bake:*) ;; \
+		*) echo "No path to Bake in GOPATH" ; exit 1 ;; \
+	esac
 	$(GO) install $(TARGET)
 
 tests: build $(patsubst %,$(TSTDIR)/%.test,$(TESTS))
