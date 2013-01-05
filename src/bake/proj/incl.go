@@ -123,7 +123,7 @@ func (n *fsNode) addIncl(reader io.Reader) error {
 		curDir := nodePath[len(nodePath)-1]
 		enterDir = false
 
-		name := strings.TrimRight(line, "\n")[lvl:]
+		name := strings.TrimRight(line, "\n\r")[lvl:]
 		if len(name) == 0 {
 			return fmt.Errorf("Empty name in %s/", curDir.name)
 		} else if !isValidFsName(name) {
