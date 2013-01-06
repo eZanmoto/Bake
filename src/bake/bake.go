@@ -27,8 +27,10 @@ func (s *stringSlice) String() string {
 	return "[" + strings.Join(*s, ", ") + "]"
 }
 
-func (s *stringSlice) Set(v string) error {
-	*s = append(*s, v)
+func (s *stringSlice) Set(vs string) error {
+	for _, v := range strings.Split(vs, ",") {
+		*s = append(*s, v)
+	}
 	return nil
 }
 
