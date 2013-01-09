@@ -23,7 +23,9 @@ generating meaningful documentation.
 
 ##### Additional Project Information
 
-+ --type        -t  The type of project, e.g. command, gui, library, etc.
++ --type        -t  The type of project, e.g. command, gui, library, etc. It can
+                    be specified multiple times, and each specification can
+                    contain multiple types, separated by commas.
 + --email       -e  The email address of the owner.
 + --license     -i  The software license the project is covered by.
 
