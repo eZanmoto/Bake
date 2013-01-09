@@ -82,22 +82,22 @@ from earlier/later text, it should be placed at the *start* of the directive.
 Take the following snippets of code as examples. The following demonstrates
 in-line includes.
 
-        .PHONY:{?bin} all build{?}{?test} test{?} clean
+    .PHONY:{?bin} all build{?}{?test} test{?} clean
 
 The next snippet demonstrates multi-line includes.
 
-        {?bin}
+    {?bin}
 
-        all: build
+    all: build
 
-        build:
-                $(COMPILER) {ProjectNameLower}
-        {?}
-        {?test}
+    build:
+            $(COMPILER) {ProjectNameLower}
+    {?}
+    {?test}
 
-        test:
-                $(COMPILER) -t {ProjectNameLower}
-        {?}
+    test:
+            $(COMPILER) -t {ProjectNameLower}
+    {?}
 
-        clean:
-                rm -rf *.o
+    clean:
+            rm -rf *.o
