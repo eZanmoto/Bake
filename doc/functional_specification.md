@@ -150,21 +150,13 @@ listing the directory path for each file separately.
 The only characters allowed in inserts and includes are capital and lowercase
 letters, and numbers. Variable and project names in inserts and includes should
 be written in pascal case (each term in the name should be lowercase, starting
-with an uppercase letter, such as ApplesAndOranges). Names are case-insensitive.
+with an uppercase letter, such as ApplesAndOranges). Names are case-sensitive.
+Variable names must start with an uppercase letter.
 
 #### Outputting Reserved Characters
 
 `{` characters must be escaped by using `{{`, so that they won't be interpreted
-as the beginning of an insert or include. For consistency, `}` must also be
-escaped, using `}}`.
-
-The delimiters that were considered for containing inserts and includes were
-
-    { }   [ ]   ( )   | |   < >
-
-The chosen delimiters were selected as their position in code is usually easier
-to predict and change than that of the others. They also tend to occur less
-frequently in non-C-style languages.
+as the beginning of an insert For consistency, `}` also be escaped, using `}}`.
 
 #### Project Variable Inserts
 
@@ -174,94 +166,69 @@ insert is as follows:
 
     This is the {ProjectName} project.
 
-##### List of Supported Variable Inserts
+#### Conditional Inserts
 
-This is a list of project variables that you can use in templates that should
-always be present. Variables are case-sensitive.
+Conditional inserts allow text to be included if its conditions are met. They
+are delimited by curly braces, like variable inserts, but also have a '?' at the
+start of the directive. The parts of a conditional insert are as follows:
 
-+ Owner
-+ ProjectName
-+ ProjectNameLower
+    {?if}insert-0{:elseif-1}insert-1...{:elseif-2}insert-n{:}default-insert{?}
 
-#### Variable-Dependent Includes
+`if` and `elseif-1`...`elseif-n` are labels representing conditionals. The first
+conditional that evaluates to true will have the corresponding insert section
+processed and inserted, or else the `default-insert` if no conditionals
+evaluated to true and the `:` directive is encountered.
 
-These types of additions are only included if the referenced variable has been
-supplied to the program, such as a maintainer email. Such an include has one of
-the following two forms:
+A conditional directive on a line by itself will have the following newline
+skipped.
 
-    {?MaintainerEmail:email:         {MaintainerEmail}}
-    {?MaintainerEmail:descrption:    Email {MaintainerEmail} with any issues.}
+The following are examples of conditional inserts:
 
-    {?MaintainerEmail:
-    email:          {MaintainerEmail}
-    description:    Email {MaintainerEmail} with any issues.
-    }
+    {?Email}email:         {Email}{?}
+    {?Email}description:   Email {Email} with any issues.{?}
+    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{?}
 
-The single-line form replaces the entire declaration (from just before the
-opening brace to just after the closing brace). The multi-line form omits the
-first newline that follows the colon and the first newline that follows the
-closing brace from the output, if said newline characters exist.
+A multi-line variation would be the following:
 
-A variable-dependent include that depends on multiple variables may join all
-required variables together using `&` as a prerequisite for its inclusion. An
-example of this may be:
+    {?Email}
+    email:         {Email}
+    description:   Email {Email} with any issues.
+    {?}
+    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{?}
 
-    {?MaintainerName&MaintainerEmail:
-    You may reach the maintainer, {MaintainerName}, at {MaintainerEmail}.
-    }
+Conditional inserts can be nested.
 
-A statement such as that in the example will only be included if
-`MaintainerName` and `MaintainerEmail` were provided.
+##### Conditionals
 
-You can only nest variable inserts in the body of a variable-dependent include.
+A conditional is a list of at least one or more variable names or project types,
+joined with logical operators or grouped with parentheses. Variable queries
+start with a capital letter and equate to 'true' in a condition if the variable
+they name was given a value. The following example would output
+'<me@example.com>' if bake was run with -Email having a value of
+'me@example.com', or would output nothing if -Email was not given a value.
 
-##### List of Supported Optional Variables
+    {?Email}<{Email}>{?}
 
-You may use the following variables in variable dependent includes. Variables
-are case-sensitive.
+Project type queries start with a lowercase letter and equate to 'true' in a
+conditional if the project being generated is of that type. The following
+example would output the contained text if the project has a type of 'bin'.
 
-+ Email
-+ Licence
+    {?bin}This project produces an executable.{?}
 
-#### Project-Dependent Includes
+You can combine queries with `&`s and `|`s, representing logical AND and OR
+respectively. `&` has a higher precedence than `|`, so the following insert will
+be processed if the Email variable is present, or if the project is both of type
+make and of type test, or if the project is of type bin.
 
-These types of additions are only included if the project being built is of the
-referenced type, such as an executable type. Project-dependent has the same
-forms and follows the same rules as variable-dependent includes, except it is
-denoted with a preceding `!` character, instead of `?`. An example of its use
-is:
+    {?Email|make&test|bin}Included{?}
 
-    {!Executable&Test:
-    build/{ProjectName}.o: src/{ProjectName}.c
-        gcc src/{ProjectName}.c -o build/{ProjectName}.o
-    }
+Queries can be grouped with parentheses to affect the order of evaluation. The
+following insert will be included if Email is present or make is a type, and
+test or bin is a type.
 
-#### Whitespace in Directives
+    {?(Email|make)&(test|bin)}Included{?}
 
-If extra whitespace is to be included in directives to potentially separate it
-from earlier/later text, it should be placed at the *start* of the directive.
-Take the following snippets of code as examples. The following demonstrates
-inline includes.
-
-        .PHONY:{!bin: all build}{!test: test} clean
-
-The next snippet demonstrates multi-line includes.
-
-        {!bin:
-
-        all: build
-
-        build:
-                $(COMPILER) {ProjectNameLower}
-        }
-        {!test:
-
-        test:
-                $(COMPILER) -t {ProjectNameLower}
-        }
-
-        clean:
-                rm -rf *.o
+Logical not is represented with `!` and has the highest precedence.
 
 ### Project Types
 
