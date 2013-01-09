@@ -19,9 +19,9 @@ the build architecture from the start.
 + To help standardize good code and project architectures.
 + To help with the integration of different languages in a single project.
 + To reduce the amount of time taken to set up new projects by using a
-	write-once, use again style. If you or another developer figures out how to
-	build a particularly tricky project, they can commit that and everyone will
-	be able to benefit from that success.
+    write-once, use again style. If you or another developer figures out how to
+    build a particularly tricky project, they can commit that and everyone will
+    be able to benefit from that success.
 + To try and decouple project-generation from IDEs, which establish a level of
     hand-holding that is difficult for programmers to diverge from. Some IDEs
     will configure project files behind the scenes, which leaves the programmer
@@ -29,4 +29,3 @@ the build architecture from the start.
     and can't handle. Project-generation on its own is helpful, and can help
     programmers skip the boilerplate and launch into the juicy internals of a
     problem.
-    projects 
