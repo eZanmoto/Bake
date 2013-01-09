@@ -1,4 +1,4 @@
-Produces an executable
+Produces a command-line executable
 src/
 	{ProjectNameLower}/
 		{ProjectNameLower}.go
