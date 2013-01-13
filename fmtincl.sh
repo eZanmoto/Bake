@@ -36,7 +36,7 @@ do
 				exit 1
 			fi
 
-			fmtincl $INCL >> $INCL.fmt
+			bin/fmtincl $INCL >> $INCL.fmt
 			if [ $? -eq 0 ]
 			then
 				diff $INCL $INCL.fmt >/dev/null

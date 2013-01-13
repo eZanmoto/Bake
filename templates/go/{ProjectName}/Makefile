@@ -47,6 +47,7 @@ all: clean build
 build: vet
 	@case $$GOPATH: in \
 		*/{ProjectName}:*) ;; \
+		*\{ProjectName}:*) ;; \
 		*) echo "No path to {ProjectName} in GOPATH" ; exit 1 ;; \
 	esac
 	$(GO) install $(TARGET)

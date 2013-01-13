@@ -37,6 +37,7 @@ all: clean build
 build: vet fmt
 	@case $$GOPATH: in \
 		*/Bake:*) ;; \
+		*\Bake:*) ;; \
 		*) echo "No path to Bake in GOPATH" ; exit 1 ;; \
 	esac
 	$(GO) install $(TARGET)
