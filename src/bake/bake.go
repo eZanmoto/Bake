@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // Package main provides the entry point to the bake executable.
-
 package main
 
 import (

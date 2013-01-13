@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // Package proj provides project generation functionality.
-
 package proj
 
 type Project struct {
