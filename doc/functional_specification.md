@@ -172,7 +172,7 @@ Conditional inserts allow text to be included if its conditions are met. They
 are delimited by curly braces, like variable inserts, but also have a '?' at the
 start of the directive. The parts of a conditional insert are as follows:
 
-    {?if}insert-0{:elseif-1}insert-1...{:elseif-2}insert-n{:}default-insert{?}
+    {?if}insert-0{:elseif-1}insert-1...{:elseif-2}insert-n{:}default-insert{!}
 
 `if` and `elseif-1`...`elseif-n` are labels representing conditionals. The first
 conditional that evaluates to true will have the corresponding insert section
@@ -184,17 +184,17 @@ skipped.
 
 The following are examples of conditional inserts:
 
-    {?Email}email:         {Email}{?}
-    {?Email}description:   Email {Email} with any issues.{?}
-    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{?}
+    {?Email}email:         {Email}{!}
+    {?Email}description:   Email {Email} with any issues.{!}
+    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{!}
 
 A multi-line variation would be the following:
 
     {?Email}
     email:         {Email}
     description:   Email {Email} with any issues.
-    {?}
-    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{?}
+    {!}
+    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{!}
 
 Conditional inserts can be nested.
 
@@ -207,26 +207,26 @@ they name was given a value. The following example would output
 '<me@example.com>' if bake was run with -Email having a value of
 'me@example.com', or would output nothing if -Email was not given a value.
 
-    {?Email}<{Email}>{?}
+    {?Email}<{Email}>{!}
 
 Project type queries start with a lowercase letter and equate to 'true' in a
 conditional if the project being generated is of that type. The following
 example would output the contained text if the project has a type of 'bin'.
 
-    {?bin}This project produces an executable.{?}
+    {?bin}This project produces an executable.{!}
 
 You can combine queries with `&`s and `|`s, representing logical AND and OR
 respectively. `&` has a higher precedence than `|`, so the following insert will
 be processed if the Email variable is present, or if the project is both of type
 make and of type test, or if the project is of type bin.
 
-    {?Email|make&test|bin}Included{?}
+    {?Email|make&test|bin}Included{!}
 
 Queries can be grouped with parentheses to affect the order of evaluation. The
 following insert will be included if Email is present or make is a type, and
 test or bin is a type.
 
-    {?(Email|make)&(test|bin)}Included{?}
+    {?(Email|make)&(test|bin)}Included{!}
 
 Logical not is represented with `!` and has the highest precedence.
 

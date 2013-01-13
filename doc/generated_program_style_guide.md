@@ -92,12 +92,12 @@ The next snippet demonstrates multi-line includes.
 
     build:
             $(COMPILER) {ProjectNameLower}
-    {?}
+    {!}
     {?test}
 
     test:
             $(COMPILER) -t {ProjectNameLower}
-    {?}
+    {!}
 
     clean:
             rm -rf *.o
