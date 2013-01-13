@@ -13,23 +13,18 @@ import (
 )
 
 const (
-	lDelim        = '{' // Denotes the start of a template directive
-	rDelim        = '}' // Denotes the end of a template directive
-	varDepInc     = '?' // Denotes a variable-dependant include
-	typeDepInc    = '!' // Denotes a type-dependant include
-	depsListEnd   = ':' // Denotes the end of a list of dependencies
-	depsListDelim = '&' // Delimits elements in a dependency list
+	lDelim    = '{' // Denotes the start of a template directive
+	rDelim    = '}' // Denotes the end of a template directive
+	condStart = '?' // Denotes the start of a conditional insert
+	condElsif = ':' // Denotes the else of a conditional insert
+	condEnd   = '!' // Denotes the end of a conditional insert
 )
 
-type NullWriter bool
+type parseStatus byte
 
-func (w *NullWriter) Write(b []byte) (int, error) {
-	return len(b), nil
-}
-
-var (
-	stdnil    = new(NullWriter)
-	stdnilbuf = bufio.NewWriter(stdnil)
+const (
+	ignoreOutput parseStatus = 0
+	genOutput    parseStatus = 1
 )
 
 func (p *Project) parseStr(src string) (string, error) {
@@ -49,259 +44,14 @@ func (p *Project) parse(reader io.Reader, writer io.Writer) error {
 	var in scanner.Scanner
 	in.Init(reader)
 
-	for in.Peek() != scanner.EOF {
-		assignedChar := false
-		var char rune
-
-		switch in.Peek() {
-		case lDelim:
-			in.Next()
-			if in.Peek() == scanner.EOF {
-				return parseErr(&in, "Got EOF after '%c'",
-					lDelim)
-			} else if in.Peek() == lDelim {
-				in.Next()
-				assignedChar, char = true, lDelim
-			} else {
-				err := p.parseDirective(&in, out)
-
-				if err != nil {
-					return err
-				}
-			}
-		case rDelim:
-			in.Next()
-			if in.Peek() == scanner.EOF {
-				return parseErr(&in, "Got EOF after '%c'",
-					rDelim)
-			} else if in.Peek() == rDelim { // '}' literal
-				in.Next()
-				assignedChar, char = true, rDelim
-			} else {
-				return parseErr(&in, "Encountered single '%c'",
-					rDelim)
-			}
-		default:
-			assignedChar, char = true, in.Next()
-		}
-
-		if assignedChar {
-			if n, err := out.WriteRune(char); n < 1 {
-				return fmt.Errorf("Couldn't write: %v", err)
-			} else if err != nil {
-				return err
-			}
-		}
-	}
-
-	return out.Flush()
-}
-
-func (p *Project) parseDirective(in *scanner.Scanner, out *bufio.Writer) error {
-	var err error
-
-	switch in.Peek() {
-	case varDepInc:
-		in.Next()
-		err = p.parseVarInc(in, out)
-	case typeDepInc:
-		in.Next()
-		err = p.parseTypeInc(in, out)
-	default:
-		err = p.parseInsert(in, out)
-	}
-
-	return err
-}
-
-func (p *Project) parseVarInc(in *scanner.Scanner, out *bufio.Writer) error {
-	varDeps, err := readDepsList(in)
+	err := p.parseText(&in, out, genOutput)
 	if err != nil {
 		return err
 	}
 
-	allRecognized := true
-	for _, name := range varDeps {
-		if _, ok := p.vars[name]; !ok {
-			allRecognized = false
-			break
-		}
-	}
-
-	if !allRecognized {
-		return p.exitDirective(in)
-	}
-
-	if in.Peek() == '\n' {
-		in.Next()
-	}
-
-	finished := false
-	for in.Peek() != scanner.EOF && !finished {
-		assignedChar := false
-		var char rune
-
-		switch in.Peek() {
-		case lDelim:
-			in.Next()
-			if in.Peek() == lDelim {
-				in.Next()
-				assignedChar, char = true, lDelim
-			} else {
-				err := p.parseInsert(in, out)
-
-				if err != nil {
-					return err
-				}
-			}
-		case rDelim:
-			in.Next()
-			if in.Peek() == rDelim {
-				in.Next()
-				assignedChar, char = true, rDelim
-			} else {
-				finished = true
-			}
-		case '\n':
-			in.Next()
-			if in.Peek() == rDelim {
-				in.Next()
-
-				if n, err := out.WriteRune('\n'); n < 1 {
-					return fmt.Errorf("Couldn't write: %v", err)
-				} else if err != nil {
-					return err
-				}
-
-				if in.Peek() == rDelim {
-					in.Next()
-					assignedChar, char = true, rDelim
-				} else {
-					if in.Peek() == '\n' {
-						in.Next()
-					}
-					finished = true
-				}
-			} else {
-				assignedChar, char = true, '\n'
-			}
-		default:
-			assignedChar, char = true, in.Next()
-		}
-
-		if assignedChar {
-			if n, err := out.WriteRune(char); n < 1 {
-				return fmt.Errorf("Couldn't write: %v", err)
-			} else if err != nil {
-				return err
-			}
-		}
-	}
-
-	return out.Flush()
-}
-
-func readDepsList(in *scanner.Scanner) ([]string, error) {
-	var buf bytes.Buffer
-	deps := make([]string, 0, 1)
-
-	for in.Peek() != scanner.EOF && in.Peek() != depsListEnd {
-		c := in.Next()
-		switch {
-		case c == depsListDelim:
-			str := buf.String()
-			if len(str) == 0 {
-				return nil, parseErr(in, "Empty variable name")
-			}
-			deps = append(deps, str)
-			buf.Reset()
-		case 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z':
-			buf.WriteRune(c)
-		default:
-			return nil, parseErr(in, "Unexpected character, '%c'",
-				c)
-		}
-	}
-
-	if in.Peek() != depsListEnd {
-		return nil, parseErr(in, "Expected '%c', encountered EOF",
-			depsListEnd)
-	}
-	in.Next() // Consume depsListEnd
-
-	str := buf.String()
-	if len(str) == 0 {
-		return nil, parseErr(in, "Empty variable name")
-	}
-	deps = append(deps, str)
-
-	return deps, nil
-}
-
-func (p *Project) exitDirective(in *scanner.Scanner) error {
-	finished := false
-
-	for in.Peek() != scanner.EOF && !finished {
-		next := in.Next()
-		if next == lDelim {
-			if in.Peek() == lDelim {
-				in.Next()
-			}
-			p.parseInsert(in, stdnilbuf)
-		} else if next == '\n' && in.Peek() == rDelim {
-			in.Next()
-			if in.Peek() == rDelim {
-				in.Next()
-			} else {
-				if in.Peek() == '\n' {
-					in.Next()
-				}
-				finished = true
-			}
-		} else if next == rDelim {
-			if in.Peek() == rDelim {
-				in.Next()
-			} else {
-				finished = true
-			}
-		}
-	}
-
-	if !finished {
-		return parseErr(in, "Expected '%c', encountered EOF", rDelim)
-	}
-
-	return nil
-}
-
-func (p *Project) parseInsert(in *scanner.Scanner, out *bufio.Writer) error {
-	var buf bytes.Buffer
-
-	for in.Peek() != scanner.EOF && in.Peek() != rDelim {
-		c := in.Next()
-		if !('A' <= c && c <= 'Z' || 'a' <= c && c <= 'z') {
-			return parseErr(in, "'%c' in include name", c)
-		}
-		buf.WriteRune(c)
-	}
-
-	if in.Peek() != rDelim {
-		return parseErr(in, "Expected '%c', encountered EOF", rDelim)
-	}
-
-	in.Next() // Consume rDelim
-
-	name := buf.String()
-	val, ok := p.vars[name]
-	if !ok {
-		return parseErr(in, "Unknown variable '"+name+"'")
-	}
-
-	if n, err := out.WriteString(val); n != len(val) {
-		return parseErr(in, "Only wrote %d characters of '%s'(%d)",
-			n, val, len(val))
-	} else if err != nil {
-		return nil
+	if in.Peek() != scanner.EOF {
+		return parseErr(&in, "Unexpected closing statement: '%c'",
+			in.Peek())
 	}
 
 	return out.Flush()
@@ -313,89 +63,216 @@ func parseErr(stream *scanner.Scanner, text string, a ...interface{}) error {
 	return fmt.Errorf("%s[%d:%d] %s", p.Filename, p.Line, p.Column, text)
 }
 
-func (p *Project) parseTypeInc(in *scanner.Scanner, out *bufio.Writer) error {
-	typeDeps, err := readDepsList(in)
-	if err != nil {
-		return err
-	}
-
-	allRecognized := true
-	for _, name := range typeDeps {
-		if !p.IsOfType(name) {
-			allRecognized = false
-			break
-		}
-	}
-
-	if !allRecognized {
-		return p.exitDirective(in)
-	}
-
-	if in.Peek() == '\n' {
-		in.Next()
-	}
-
-	finished := false
-	for in.Peek() != scanner.EOF && !finished {
-		assignedChar := false
-		var char rune
+// Parses text from in to out until it reaches EOF, reads '{:' or '{!'
+func (p *Project) parseText(in *scanner.Scanner, out *bufio.Writer, s parseStatus) error {
+	for finished := isEOF(in); !finished; finished = finished || isEOF(in) {
+		readChar := false
 
 		switch in.Peek() {
 		case lDelim:
 			in.Next()
-			if in.Peek() == lDelim {
-				in.Next()
-				assignedChar, char = true, lDelim
-			} else {
-				err := p.parseInsert(in, out)
 
-				if err != nil {
+			switch in.Peek() {
+			case scanner.EOF:
+				return parseErr(in,
+					"Expected directive, got EOF")
+			case lDelim:
+				readChar = true
+			case condEnd, ':':
+				finished = true
+			default:
+				if err := p.parseDirect(in, out, s); err != nil {
 					return err
 				}
 			}
 		case rDelim:
 			in.Next()
-			if in.Peek() == rDelim {
-				in.Next()
-				assignedChar, char = true, rDelim
-			} else {
-				finished = true
-			}
-		case '\n':
-			in.Next()
-			if in.Peek() == rDelim {
-				in.Next()
 
-				if n, err := out.WriteRune('\n'); n < 1 {
-					return fmt.Errorf("Couldn't write: %v", err)
+			switch in.Peek() {
+			case scanner.EOF:
+				return parseErr(in, "Escape '%c', got EOF",
+					rDelim)
+			case rDelim:
+				readChar = true
+			default:
+				return parseErr(in, "Escape '%c', got '%c'",
+					rDelim, in.Peek())
+			}
+		default:
+			readChar = true
+		}
+
+		if readChar {
+			c := in.Next()
+			if s == genOutput {
+				if n, err := out.WriteRune(c); err == nil && n < 1 {
+					return fmt.Errorf("Couldn't write: %c", c)
 				} else if err != nil {
 					return err
 				}
-
-				if in.Peek() == rDelim {
-					in.Next()
-					assignedChar, char = true, rDelim
-				} else {
-					if in.Peek() == '\n' {
-						in.Next()
-					}
-					finished = true
-				}
-			} else {
-				assignedChar, char = true, '\n'
 			}
-		default:
-			assignedChar, char = true, in.Next()
+		}
+	}
+
+	return nil
+}
+
+func isEOF(in *scanner.Scanner) bool {
+	return in.Peek() == scanner.EOF
+}
+
+func (p *Project) parseDirect(in *scanner.Scanner, out *bufio.Writer, s parseStatus) error {
+	var err error
+
+	if in.Peek() == condStart {
+		err = p.parseCond(in, out, s)
+	} else {
+		err = p.parseVar(in, out, s)
+	}
+
+	return err
+}
+
+func (p *Project) parseVar(in *scanner.Scanner, out *bufio.Writer, s parseStatus) error {
+	name, err := parseName(in)
+	if err != nil {
+		return err
+	}
+
+	if err = match(in, rDelim); err != nil {
+		return err
+	}
+
+	if s == genOutput {
+		val, ok := p.vars[name]
+		if !ok {
+			return parseErr(in, "Unknown variable '%s'", name)
 		}
 
-		if assignedChar {
-			if n, err := out.WriteRune(char); n < 1 {
-				return fmt.Errorf("Couldn't write: %v", err)
-			} else if err != nil {
+		if n, err := out.WriteString(val); n != len(val) {
+			return parseErr(in, "Only wrote %d characters of '%s'(%d)",
+				n, val, len(val))
+		} else if err != nil {
+			return err
+		}
+	}
+
+	return out.Flush()
+}
+
+func (p *Project) parseCond(in *scanner.Scanner, out *bufio.Writer, s parseStatus) error {
+	hasIncluded := false
+
+	for in.Peek() != condEnd && in.Peek() != scanner.EOF {
+		include, err := p.evalCondBool(in)
+		if err != nil {
+			return err
+		}
+		skipIfNewline(in)
+
+		if !hasIncluded && include {
+			if err := p.parseText(in, out, s); err != nil {
+				return err
+			}
+			hasIncluded = true
+		} else {
+			if err := p.parseText(in, out, ignoreOutput); err != nil {
 				return err
 			}
 		}
 	}
 
-	return out.Flush()
+	if err := match(in, condEnd); err != nil {
+		return err
+	}
+	if err := match(in, rDelim); err != nil {
+		return err
+	}
+	skipIfNewline(in)
+
+	return nil
+}
+
+// TODO add to custom scanner
+func skipIfNewline(in *scanner.Scanner) {
+	if in.Peek() == '\n' {
+		in.Next()
+	}
+}
+
+// TODO add to custom scanner
+func match(in *scanner.Scanner, r rune) error {
+	var err error
+
+	if c := in.Next(); c == scanner.EOF {
+		err = parseErr(in, "Expected '%c', got EOF", r)
+	} else if c != r {
+		err = parseErr(in, "Expected '%c', got '%c'", r, c)
+	}
+
+	return err
+}
+
+func (p *Project) evalCondBool(in *scanner.Scanner) (eval bool, err error) {
+	if c := in.Next(); c == scanner.EOF {
+		err = parseErr(in, "Expected '%c' or '%c', got EOF",
+			condStart, condElsif)
+		return
+	} else if c == condStart {
+		if in.Peek() == rDelim {
+			err = parseErr(in, "Start conditional can't be empty")
+			return
+		}
+	} else if c != condElsif {
+		err = parseErr(in, "Expected '%c' or '%c', got '%c'",
+			condStart, condElsif, c)
+		return
+	}
+
+	eval, err = p.evalCondName(in)
+	if err != nil {
+		return
+	}
+	err = match(in, rDelim)
+
+	return
+}
+
+func (p *Project) evalCondName(in *scanner.Scanner) (eval bool, err error) {
+	name, err := parseName(in)
+	if err != nil {
+		return
+	}
+
+	if 'a' <= name[0] && name[0] <= 'z' {
+		eval = p.IsOfType(name)
+	} else {
+		eval = p.hasVar(name)
+	}
+
+	return
+}
+
+func (p *Project) hasVar(name string) bool {
+	_, exists := p.vars[name]
+	return exists
+}
+
+func parseName(in *scanner.Scanner) (s string, err error) {
+	var buf bytes.Buffer
+
+	for isAlpha(in.Peek()) {
+		buf.WriteRune(in.Next())
+	}
+
+	s = buf.String()
+	if len(s) == 0 {
+		err = parseErr(in, "Expected name")
+	}
+
+	return
+}
+
+func isAlpha(r rune) bool {
+	return 'A' <= r && r <= 'Z' || 'a' <= r && r <= 'z'
 }

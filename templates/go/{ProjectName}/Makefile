@@ -1,50 +1,46 @@
 # Copyright {Year} {Owner}. All rights reserved.
-{?License:
-# Use of this source code is governed by a GPL
-# license that can be found in the LICENSE file.
-}
 
 # Targets
 #
-{!bin:
+{?bin}
 # all:      Make a clean build
 # build:    Build the {ProjectNameLower} executable
-}
-{!test:
+{!}
+{?test}
 # tests:    Build the debuggable testing files
 # runtests: Runs all tests
-}
-{!bin:
+{!}
+{?bin}
 # vet:      Runs basic safety checks on code
-}
+{!}
 # clean:    Removes the local build files
 
-.PHONY:{!bin: all build}{!test: tests runtests}{!bin: vet} clean
+.PHONY:{?bin} all build{!}{?test} tests runtests{!}{?bin} vet{!} clean
 
 # Tools
 GO=go
-{!test:
+{?test}
 GOTEST=$(GO) test
-}
+{!}
 
 # Directories
 BINDIR=bin
 PKGDIR=pkg
-{!bin:
+{?bin}
 SRCDIR=src
 
 VPATH=$(SRCDIR)
 
 # Target
 TARGET={ProjectNameLower}
-}
-{!test:
+{!}
+{?test}
 
 # Testing
 TSTDIR=$(PKGDIR)/tst
 TESTS={ProjectNameLower}
-}
-{!bin:
+{!}
+{?bin}
 
 all: clean build
 
@@ -54,8 +50,8 @@ build: vet
 		*) echo "No path to {ProjectName} in GOPATH" ; exit 1 ;; \
 	esac
 	$(GO) install $(TARGET)
-}
-{!test:
+{!}
+{?test}
 
 tests: build $(patsubst %,$(TSTDIR)/%.test,$(TESTS))
 	echo source $(GOROOT)/src/pkg/runtime/runtime-gdb.py > $(TSTDIR)/.gdbinit
@@ -77,12 +73,12 @@ runtests: build $(TESTS)
 	@for TEST in $(TESTS); do \
 		go test $$TEST; \
 	done
-}
-{!bin:
+{!}
+{?bin}
 
 vet:
 	$(GO) tool vet $(SRCDIR)
-}
+{!}
 
 clean:
 	rm -rf $(BINDIR) $(PKGDIR)
