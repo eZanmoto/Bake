@@ -32,7 +32,10 @@ generating meaningful documentation.
 ##### Progress Control
 
 + --resolve     -r  If files that bake wants to create exist, resolve the
-                    differences instead of skipping.
+                    differences instead of skipping. This adds new lines to the
+                    existing file in a diff-like format.
++ --merge       -m  Like resolve, but the changes are integrated without being
+                    highlighted with the diff-like syntax.
 
 ##### Help
 
