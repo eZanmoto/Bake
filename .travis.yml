@@ -2,7 +2,9 @@
 
 language: go
 
-before_install: BAKE=$(PWD)
+before_install:
+    - BAKE=$PWD
+    - GOPATH=$GOPATH:$BAKE
 
 install: go install bake
 
