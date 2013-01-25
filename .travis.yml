@@ -1,0 +1,11 @@
+# For integration with Travis-CI.
+
+language: go
+
+before_install: BAKE=$(PWD)
+
+install: go install bake
+
+script:
+  - make tests
+  - make runtests
