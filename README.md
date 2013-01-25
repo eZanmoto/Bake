@@ -1,4 +1,5 @@
-Bake
+Bake [![Build
+Status](https://travis-ci.org/eZanmoto/Bake.png?branch=master)](https://travis-ci.org/eZanmoto/Bake)
 ====
 
 Sean Kelleher
