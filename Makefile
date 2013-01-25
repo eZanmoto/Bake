@@ -62,6 +62,7 @@ runtests: build $(TESTS)
 	@for TEST in $(TESTS); do \
 		go test -i $$TEST; \
 		go test $$TEST; \
+		if [ $$? -ne 0 ]; then exit 1; fi; \
 	done
 
 fmt: fmtincl
