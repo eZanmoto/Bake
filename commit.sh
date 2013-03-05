@@ -29,7 +29,7 @@ then
 fi
 
 # Run tests
-for TEST in tests/perm bake bake/proj
+for TEST in tests/perm bake bake/proj diff
 do
 	go test -i $TEST
 	go test $TEST
