@@ -34,6 +34,13 @@ generating meaningful documentation.
 + --resolve     -r  If files that bake wants to create exist, resolve the
                     differences instead of skipping. This adds new lines to the
                     existing file in a diff-like format.
++ --include     -R  If files that bake wants to create exist, resolve the
+                    differences instead of skipping. This adds new lines to the
+                    existing file in what is inferred to be the correct
+                    position. This option should only be used after a project
+                    has been generated, to include a forgotten project type for
+                    instance. If a project has been significantly updated,
+                    consider using `--resolve` instead.
 + --merge       -m  Like resolve, but the changes are integrated without being
                     highlighted with the diff-like syntax.
 
