@@ -6,7 +6,10 @@ package proj
 
 import (
 	"bake/env"
+	"bufio"
+	"diff"
 	"fmt"
+	"io"
 	"os"
 	"path"
 )
@@ -68,23 +71,32 @@ func (p *Project) genDirConts(dir *fsNode, srcDir, tgtDir string) error {
 }
 
 func (p *Project) genFile(src, tgt string) error {
-	in, err := os.OpenFile(src, os.O_RDONLY, 0666)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
 	out, err := os.OpenFile(tgt, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		if !os.IsExist(err) {
 			return err
 		}
-		if p.verbose {
+		if p.resolve {
+			if err := p.addUpdates(src, tgt); err != nil {
+				return err
+			}
+			if p.verbose {
+				defer fmt.Printf("Merged file '%s'\n", tgt)
+			} else {
+				defer fmt.Printf("%s\n", tgt)
+			}
+		} else if p.verbose {
 			fmt.Printf("File '%s' exists, skipping...\n", tgt)
 		}
 		return nil
 	}
 	defer out.Close()
+
+	in, err := os.OpenFile(src, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
 
 	if p.verbose {
 		defer fmt.Printf("Generated file '%s'\n", tgt)
@@ -110,4 +122,65 @@ func (p *Project) genDir(dir string) error {
 	}
 
 	return nil
+}
+
+func (p *Project) addUpdates(src, tgt string) error {
+	tgtFile, err := os.OpenFile(tgt, os.O_RDWR, 0666)
+	if err != nil {
+		return err
+	}
+	defer tgtFile.Close()
+
+	srcFile, err := os.OpenFile(src, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	chs := diff.Diff(readLines(srcFile), readLines(tgtFile))
+
+	lastLineWasNew := false
+	out := bufio.NewWriter(tgtFile)
+
+	for i := 0; i < chs.Len(); i++ {
+		stat, line, err := chs.Get(i)
+		if err != nil {
+			return err
+		}
+
+		lineIsNew := stat == diff.Add
+		if lastLineWasNew != lineIsNew {
+			lastLineWasNew = lineIsNew
+
+			if lineIsNew {
+				out.WriteString("++++ <new>\n")
+			} else {
+				out.WriteString("++++ </new>\n")
+			}
+		}
+
+		out.WriteString(line + "\n")
+	}
+	out.Flush()
+
+	return nil
+}
+
+func readLines(reader io.Reader) []string {
+	var lines []string
+	var err error
+	in := bufio.NewReader(reader)
+
+	for err != io.EOF {
+		isPrefix := true
+		line := ""
+		for isPrefix && err != io.EOF {
+			var bytes []byte
+			bytes, isPrefix, err = in.ReadLine()
+			line += string(bytes)
+		}
+		lines = append(lines, line)
+	}
+
+	return lines
 }
