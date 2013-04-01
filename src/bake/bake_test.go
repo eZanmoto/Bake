@@ -62,6 +62,8 @@ func runBake(t *testing.T, args ...string) (cmd *exec.Cmd, o, e string) {
 		t.Fatalf("Error reading stderr: %v", err)
 	}
 
+	// don't check error return of Wait(), as it returns non-nil on non-zero
+	// exit status, which we want to check later
 	cmd.Wait()
 
 	return
