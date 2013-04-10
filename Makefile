@@ -30,7 +30,7 @@ TARGET=bake
 
 # Testing
 TSTDIR=$(PKGDIR)/tst
-TESTS=tests/perm bake bake/proj diff strio
+TESTS=tests/perm bake bake/proj diff readers strio
 
 all: clean build
 
