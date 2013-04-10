@@ -65,9 +65,9 @@ runtests: build $(TESTS)
 		if [ $$? -ne 0 ]; then exit 1; fi; \
 	done
 
-fmt: fmtincl
+fmt: fmtincl fmtsrc
 
-fmtincl: fmtsrc
+fmtincl:
 	$(GO) install fmtincl
 	./fmtincl.sh
 
