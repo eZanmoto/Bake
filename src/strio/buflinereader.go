@@ -7,24 +7,13 @@ package strio
 import (
 	"bufio"
 	"io"
-	"os"
 )
 
 type bufLineReader struct {
 	in *bufio.Reader
 }
 
-func NewFileLineReader(path string) (LineReader, error) {
-	file, err := os.Open(path)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return NewLineReader(file), nil
-}
-
-func NewLineReader(in io.Reader) LineReader {
+func newBufLineReader(in io.Reader) *bufLineReader {
 	bufin := bufio.NewReader(in)
 	return &bufLineReader{bufin}
 }

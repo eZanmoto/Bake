@@ -4,6 +4,11 @@
 
 package strio
 
+import (
+	"io"
+	"os"
+)
+
 type LineReader interface {
 	// Reads the next line from the underlying stream.
 	//
@@ -23,4 +28,18 @@ type LineReader interface {
 
 	// Same as ReadLine() but removes the trailing newline if present.
 	ChompLine() (string, error)
+}
+
+func NewFileLineReader(path string) (LineReader, error) {
+	file, err := os.Open(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewLineReader(file), nil
+}
+
+func NewLineReader(in io.Reader) LineReader {
+	return newBufLineReader(in)
 }
