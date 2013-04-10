@@ -34,6 +34,9 @@ TESTS=tests/perm bake bake/proj diff strio
 
 all: clean build
 
+# fmt before vet because fmt and vet catch the same errors, but vet outputs them
+# in a way that doesn't work with Vim's Quickfix window (Vim doesn't open the
+# correct file).
 build: fmt vet bin/$(TARGET)
 
 bin/$(TARGET):
