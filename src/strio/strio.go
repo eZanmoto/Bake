@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-// Reads all lines from 'r', with trailing newlines removed
+// Reads all lines from 'r', with trailing newlines removed from each line
 func ChompLines(r io.Reader) (lines []string, err error) {
 	in := NewLineReader(r)
 	lines = make([]string, 0)
