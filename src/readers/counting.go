@@ -5,7 +5,6 @@
 package readers
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -24,7 +23,6 @@ func NewCountingReader(in io.Reader) *countingReader {
 
 func (r *countingReader) Read(p []byte) (n int, err error) {
 	n, err = r.in.Read(p)
-	fmt.Printf("%d", n)
 
 	for i := range p {
 		if p[i] == '\n' {
