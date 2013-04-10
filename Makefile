@@ -72,7 +72,8 @@ fmtincl: fmtsrc
 	./fmtincl.sh
 
 fmtsrc:
-	./fmtsrc.sh
+	gofmt -d -s src
+	gofmt -s -w src
 
 vet:
 	$(GO) tool vet $(SRCDIR)
