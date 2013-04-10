@@ -34,7 +34,9 @@ TESTS=tests/perm bake bake/proj diff strio
 
 all: clean build
 
-build: vet fmt
+build: fmt vet bin/$(TARGET)
+
+bin/$(TARGET):
 	@case $$GOPATH: in \
 		*/Bake:*) ;; \
 		*\Bake:*) ;; \
