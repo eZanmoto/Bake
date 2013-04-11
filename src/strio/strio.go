@@ -7,6 +7,7 @@ package strio
 
 import (
 	"io"
+	"strings"
 )
 
 // Reads all lines from 'r', with trailing newlines removed from each line
@@ -26,4 +27,9 @@ func ChompLines(r io.Reader) (lines []string, err error) {
 	}
 
 	return
+}
+
+func ReadAll(r io.Reader) (string, error) {
+	lines, err := ChompLines(r)
+	return strings.Join(lines, "\n"), err
 }

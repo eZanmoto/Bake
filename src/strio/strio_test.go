@@ -40,3 +40,28 @@ func testChompLines(t *testing.T, src string, exp ...string) {
 		}
 	}
 }
+
+func TestReadAllWithNewLine(t *testing.T) {
+	testReadAll(t, "a\nb\nc\n")
+}
+
+func TestReadAllWithoutNewLine(t *testing.T) {
+	testReadAll(t, "a\nb\nc")
+}
+
+func testReadAll(t *testing.T, src string) {
+	// Arrange
+	in := bytes.NewBufferString(src)
+
+	// Act
+	output, err := ReadAll(in)
+
+	// Assert
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if output != src {
+		t.Errorf("expected '%s', got '%s'", src, output)
+	}
+}
