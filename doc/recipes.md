@@ -20,9 +20,6 @@ Recipes reside in the `recipes` directory and have the following structure:
             base
             ...
         tests/
-            stderr/
-            stdout/
-            [2..]/
             base
             ...
 
@@ -31,57 +28,61 @@ Recipes reside in the `recipes` directory and have the following structure:
 `types` contains project type descriptions describing the different project
 types that can be generated.
 
-`tests` contains test scripts for each project type. The sub-folders `stdout`
-and `stderr`, and all the numbered sub-folders, contain text templates that
-reflect expected outputs for those streams to be used in test scripts.
+`tests` contains test scripts for each project type.
 
 ### Test Scripts
 
 Tests, as usual, are of 3 critical values:
-    1. ensure quality
-    2. show how to use tool
-    3. show what to expect
 
-#### Structure
+1. ensure quality
+2. show how to use the tool
+3. show what to expect
 
-Each test file is broken into groups of the following format:
+#### Name
 
-    type1 type2 ... typeN
-
-        # test one description
-        command
-        ...
-
-        # test two description
-        command
-        ...
-
-        ...
-
-        # test n description
-        command
-        ...
-
-`type1 type2 ... typeN` is a space-separated list of types that this test group
-tests. For instance, a test group with a type list `bin make test` will be
-testing the results of running a bake command of the form
+The name of a test script is an underscore-separated list of types that this
+test checks. For instance, the tests in a test script named `bin_make_test` will
+be run before and after a call to 
 
     bake -o <Owner> -l <Language> -n <ProjectName> -t bin,make,test
 
-The test group is broken down into further sub-tests by headings (lines
-beginning with `#`). Headings define what a sub-test is testing.
+#### Structure
 
-Each non-empty line in a test script must be indented by four spaces (not tabs).
-This is so that commands that are have special meaning in tests can be denoted
-by replacing the third space with a special character, called a test directive.
+Each test script is broken into tests of the following format:
 
-Test groups are followed by three blank lines, unless the test group doesn't
-have a body, in which case the test group is followed by a single blank line.
+    test one description
+    ?command
+    ...
+
+    test two description
+    ?command
+    ...
+
+    ...
+
+    test n description
+    ?command
+    ...
+
+Each test is separated by a single blank line. A test starts with a description,
+followed by 1 or more test actions. A test action is a test directive followed
+immediately by a command (one that would be entered into a UNIX shell). The test
+directive specifies the expected outcome of the following command, e.g. whether
+it should run, whether it should succeed or fail, etc.
+
+The file as a whole is considered to be a test group, which consists of the bake
+project types specified by the file name and the tests specified within the
+file.
 
 #### Test Directives
 
-Test directives denote what the test expects the outcome of the following
-command to be.
+Test directives denote what the test expects the outcome of running the command
+following it to be.
+
+##### Setup (` `)
+
+The command following this directive is always expected to pass (return 0). It
+is used for setting up tests.
 
 ##### Pass (`+`)
 
@@ -89,26 +90,42 @@ The command following this directive is expected to fail (return a non-zero
 value) before the bake command is run, and pass (return 0) after the bake
 command is run.
 
+##### Build Pass (`=`)
+
+The command following this directive is expected to return an error before the
+bake command is run, and is expected to pass (return 0) after the bake command
+is run.
+
+This directive is primarily for testing the binary output of a project, whose
+attempted execution should cause an error before bake is run. This is because
+the executable shouldn't exist, which should cause the OS to signal an error
+upon attempting to execute it.
+
 ##### Fail (`-`)
 
-The command following this directive not run before the bake command is run, and
-is expected to fail (return a non-zero value) after the bake command is run.
+The command following this directive is not run before the bake command is run,
+and is expected to fail (return a non-zero value) after the bake command is run.
 
-##### Output (`>`)
+##### Debug (`*`)
 
-This directive is followed by a list of outputs
+The output (to any stream) and return value of the command following this
+directive is written to standard output. The command isn't considered a test,
+and so doesn't fail on returning an unexpected result. It is for debugging
+purposes only, and shouldn't be committed to the recipe's repository.
+
+##### Comment (`/`)
+
+The text following this directive is ignored. It is for debugging purposes only,
+and shouldn't be committed to the recipe's repository.
 
 #### Execution
 
 Each test group is run before and after running bake with the types specified in
-the test group's type list. A test group is run by executing its listed commands
-in sequence, which are in turn grouped under test descriptions, which describes
-and groups a sequence of commands.
+the test group's type list.  A test group is run by executing the commands in
+each test in sequence, and comparing the result of running the command to the
+test expectation.
 
-When executing the commands, commands without directives are considered set-up
-commands and must return 0 before and after running bake, otherwise the test is
-considered unstable and fails.
-
-After bake executes with multiple types, the basic test for each type (i.e. the
-test containing that type only) is run before the actual test for that
-combination of types. In this way, if 
+If a test group is testing multiple types, the test group for each of those
+individual types is run after bake runs. This helps ensure that specifying
+multiple project types doesn't change the behaviour of using bake with
+individual types.
