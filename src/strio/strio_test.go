@@ -26,11 +26,11 @@ func testChompLines(t *testing.T, src string, exp ...string) {
 
 	// Assert
 	if err != nil {
-		t.Fatalf("unexpected error '%v'\n", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
 
 	if len(lines) != len(exp) {
-		t.Errorf("expected %d lines, got %d\n", len(exp), len(lines))
+		t.Errorf("expected %d lines, got %d", len(exp), len(lines))
 	}
 
 	for i, line := range exp {
