@@ -116,6 +116,10 @@ func parseTestAction(actionSpecifier rune, cmd string) testAction {
 	switch actionSpecifier {
 	case ' ':
 		action = &command{cmd}
+	case '+':
+		action = &pass{cmd}
+	case '=':
+		action = &buildPass{cmd}
 	default:
 		action = nil
 	}

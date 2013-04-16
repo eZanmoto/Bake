@@ -7,8 +7,13 @@ package test
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"strio"
+)
+
+const (
+	exitStatusErr = "exit status "
 )
 
 type testAction interface {
@@ -20,6 +25,10 @@ type result struct {
 	success_ bool
 	descr_   string
 	detail_  string
+}
+
+func (r *result) asExpected() bool {
+	return r.success()
 }
 
 func (r *result) success() bool {
@@ -77,15 +86,69 @@ func runCmd(cmdLine string) (*result, error) {
 			cmdLine, err)
 	}
 
+	// err is set if exit status is not 0
 	err = cmd.Wait()
 
+	exitStatus := 0
+	if err != nil {
+		if strings.HasPrefix(err.Error(), exitStatusErr) {
+			// returning non-zero is not an error in this context,
+			// just a possible outcome of running an executable, so
+			// we are free to overwrite the value in the following
+			// if statement
+
+			stat := err.Error()[len(exitStatusErr):]
+			if exitStatus, err = strconv.Atoi(stat); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, fmt.Errorf("error waiting for '%s': %v",
+				cmdLine, err)
+		}
+	}
+
 	return &result{
-		success_: err == nil,
+		success_: exitStatus == 0,
 		descr_:   cmdLine,
-		detail_:  fmt.Sprintf("stdout{%s}\nstderr{%s}", output, errput),
-	}, err
+		detail_: fmt.Sprintf("stdout{%s}\nstderr{%s}\nexit status %d",
+			output, errput, exitStatus),
+	}, nil
 }
 
 func (c *command) afterBake() (*result, error) {
 	return runCmd(c.cmd)
+}
+
+type pass struct {
+	cmd string
+}
+
+func (p *pass) beforeBake() (*result, error) {
+	r, err := runCmd(p.cmd)
+
+	if err != nil {
+		return nil, err
+	}
+	return &result{!r.success(), r.descr(), r.detail()}, nil
+}
+
+func (p *pass) afterBake() (*result, error) {
+	return runCmd(p.cmd)
+}
+
+type buildPass struct {
+	cmd string
+}
+
+func (p *buildPass) beforeBake() (*result, error) {
+	r, err := runCmd(p.cmd)
+
+	if err != nil {
+		return &result{true, p.cmd, err.Error()}, nil
+	}
+	return &result{false, r.descr(), r.detail()}, nil
+}
+
+func (p *buildPass) afterBake() (*result, error) {
+	return runCmd(p.cmd)
 }

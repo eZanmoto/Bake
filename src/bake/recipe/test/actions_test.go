@@ -6,49 +6,191 @@ package test
 
 import (
 	"bytes"
-	"io/ioutil"
-	"os"
+	"strio"
 	"testing"
 )
 
-func TestCommandBeforeBake(t *testing.T) {
+const (
+	commandDirective   = ' '
+	passDirective      = '+'
+	buildPassDirective = '='
+)
+
+const (
+	goodCmd = iota
+	badCmd
+	errCmd
+)
+
+const (
+	succeeds = iota
+	fails
+	errs
+)
+
+const (
+	beforeBake = true
+	afterBake  = false
+)
+
+// The following format should be used for the action tests:
+//
+// func TestCommandActionWithGoodCmdSucceedsBeforeBake(t *testing.T) {
+// 	assert(t, commandDirective, goodCmd, succeeds, beforeBake)
+// }
+//
+// pros: will know exactly what asserts failed
+// cons: redundant naming scheme -- can solve by generating tests from asserts
+//
+// TODO generate tests
+
+func TestCommandAction(t *testing.T) {
+	assert(t, commandDirective, goodCmd, succeeds, beforeBake)
+	assert(t, commandDirective, badCmd, fails, beforeBake)
+	assert(t, commandDirective, errCmd, errs, beforeBake)
+
+	assert(t, commandDirective, goodCmd, succeeds, afterBake)
+	assert(t, commandDirective, badCmd, fails, afterBake)
+	assert(t, commandDirective, errCmd, errs, afterBake)
+}
+
+func TestPassAction(t *testing.T) {
+	assert(t, passDirective, badCmd, succeeds, beforeBake)
+	assert(t, passDirective, goodCmd, fails, beforeBake)
+	assert(t, passDirective, errCmd, errs, beforeBake)
+
+	assert(t, passDirective, goodCmd, succeeds, afterBake)
+	assert(t, passDirective, badCmd, fails, afterBake)
+	assert(t, passDirective, errCmd, errs, afterBake)
+}
+
+func TestBuildPassAction(t *testing.T) {
+	assert(t, buildPassDirective, goodCmd, fails, beforeBake)
+	assert(t, buildPassDirective, badCmd, fails, beforeBake)
+	assert(t, buildPassDirective, errCmd, succeeds, beforeBake)
+
+	assert(t, buildPassDirective, goodCmd, succeeds, afterBake)
+	assert(t, buildPassDirective, badCmd, fails, afterBake)
+	assert(t, buildPassDirective, errCmd, errs, afterBake)
+}
+
+func assert(t *testing.T, directive rune, cmd uint, expect uint,
+	beforeBake bool) {
+
+	// While this method of testing is not the best approach, it will be
+	// kept in place until the tests are generated.
+	//
+	// This method is so big because it's doing multiple things at once:
+	// * selecting what command to run
+	// * parsing the action from the command
+	// * running the before/afterBake() method to be tested
+	// * checking the results of the previous step
+	//
+	// The reason for this is to provide a DSL-like invocation for the
+	// method, so that it is obvious at a glance what the method is testing;
+	// an example call to this method may look like
+	//
+	//     assert(t, commandDirective, goodCmd, succeeds, afterBake)
+	//
+	// alternatives:
+	// calls to smaller methods in calling method
+	//     pros: dedicated methods
+	//     cons: calls are duplicated in sequence in every method call
+	//
+	// calls to smaller methods in this method
+	//     pros: dedicated methods
+	//     cons: it is better to be able to control variables locally (TODO why)
+	//
+	// chain method DSL (either "stateful" or "stateless"):
+	//     pros: dedicated method
+	//           more DSL-like
+	//     cons: more complicated
+
 	// Arrange
-	command := parseAction(t, "descr\n touch wood")
 
-	// don't want to dirty the build directory
-	if err := cdNewTmp(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	// cmdLine is enumerated so that the actual command to be run is local
+	// to this assert method -- this is done so that changes to the command
+	// to be run will affect all callers
+	//
+	// cmdLine is 'linked' to the outcomes at the bottom of this method
+	var cmdLine string
+	switch cmd {
+	case goodCmd:
+		cmdLine = "true"
+	case badCmd:
+		cmdLine = "false"
+	case errCmd:
+		cmdLine = ""
+	default:
+		t.Fatalf("%d is not a valid cmd", cmd)
 	}
-
-	if exists, err := fileExists("wood"); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if exists {
-		t.Fatalf("file 'wood' shouldn't exist before test")
-	}
+	action := string(directive) + cmdLine
+	command := parseAction(t, "descr\n"+action)
 
 	// Act
-	result, err := command.beforeBake()
+	var result *result
+	var err error
+	if beforeBake {
+		result, err = command.beforeBake()
+	} else {
+		result, err = command.afterBake()
+	}
 
 	// Assert
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+
+	// general rule - possible outcomes of any method:
+	// err != nil && result != nil : ok -> err
+	// err != nil && result == nil : ok -> err
+	// err == nil && result != nil : ok -> result
+	// err == nil && result == nil : fatal error
+
+	when := "before"
+	if !beforeBake {
+		when = "after"
 	}
 
-	if !result.success() {
-		t.Fatalf("unexpected failure: %s", result.detail())
-	}
+	if expect == errs {
+		// not &&'ing to previous condition so that it's clearer that
+		// this test occurs when we're expecting an error
+		if err == nil {
+			if result == nil {
+				t.Fatalf("err and result were nil when expecting error")
+			}
+			// inv: err == nil && result != nil
 
-	if exists, err := fileExists("wood"); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if !exists {
-		t.Fatalf("file 'wood' should exist after test")
+			t.Fatalf("expected an error %s bake, got '%s'", when,
+				result.detail())
+		}
+	} else {
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		// inv: err == nil
+
+		if result == nil {
+			t.Fatalf("err and result were nil")
+		}
+		// inv: err == nil && result != nil
+
+		successExpectation := expect == succeeds
+
+		if result.success() != successExpectation {
+			expected := "succeed"
+			if !successExpectation {
+				expected = "fail"
+			}
+
+			t.Fatalf("expected '%s' test to %s %s bake: %s", action,
+				expected, when, result.detail())
+		}
 	}
 }
 
 func parseAction(t *testing.T, def string) testAction {
 	buf := bytes.NewBufferString(def)
+	in := strio.NewLineReader(buf)
 
-	tests, err := readTypeTests(buf)
+	tests, err := readTypeTests(in)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -63,58 +205,4 @@ func parseAction(t *testing.T, def string) testAction {
 	}
 
 	return actions[0]
-}
-
-func cdNewTmp() error {
-	tmpDirPath, err := ioutil.TempDir("", "")
-	if err != nil {
-		return err
-	}
-
-	return os.Chdir(tmpDirPath)
-}
-
-func fileExists(path string) (exists bool, err error) {
-	_, err = os.Stat(path)
-
-	exists = err == nil
-	if os.IsNotExist(err) {
-		err = nil
-	}
-
-	return
-}
-
-func TestCommandAfterBake(t *testing.T) {
-	// Arrange
-	command := parseAction(t, "descr\n touch wood")
-
-	// don't want to dirty the build directory
-	if err := cdNewTmp(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if exists, err := fileExists("wood"); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if exists {
-		t.Fatalf("file 'wood' shouldn't exist before test")
-	}
-
-	// Act
-	result, err := command.afterBake()
-
-	// Assert
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if !result.success() {
-		t.Fatalf("unexpected failure: %s", result.detail())
-	}
-
-	if exists, err := fileExists("wood"); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	} else if !exists {
-		t.Fatalf("file 'wood' should exist after test")
-	}
 }
