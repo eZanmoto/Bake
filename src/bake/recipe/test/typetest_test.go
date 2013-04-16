@@ -6,15 +6,21 @@ package test
 
 import (
 	"bytes"
+	"strio"
 	"testing"
 )
 
+func newLineReader(s string) strio.LineReader {
+	buf := bytes.NewBufferString(s)
+	return strio.NewLineReader(buf)
+}
+
 func TestValidDirective(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr\n cmd")
+	in := newLineReader("descr\n cmd")
 
 	// Act
-	tests, err := readTypeTests(buf)
+	tests, err := readTypeTests(in)
 
 	// Assert
 	if err != nil {
@@ -35,12 +41,12 @@ func TestValidDirective(t *testing.T) {
 	}
 }
 
-func TestEmptydescr(t *testing.T) {
+func TestEmptyDescr(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("\n cmd")
+	in := newLineReader("\n cmd")
 
 	// Act
-	_, err := readTypeTests(buf)
+	_, err := readTypeTests(in)
 
 	// Assert
 	if err == nil {
@@ -50,10 +56,10 @@ func TestEmptydescr(t *testing.T) {
 
 func TestInvalidDirective(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr\n§cmd")
+	in := newLineReader("descr\n§cmd")
 
 	// Act
-	_, err := readTypeTests(buf)
+	_, err := readTypeTests(in)
 
 	// Assert
 	if err == nil {
@@ -61,12 +67,12 @@ func TestInvalidDirective(t *testing.T) {
 	}
 }
 
-func TestEOFAfterdescr(t *testing.T) {
+func TestEOFAfterDescr(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr")
+	in := newLineReader("descr")
 
 	// Act
-	_, err := readTypeTests(buf)
+	_, err := readTypeTests(in)
 
 	// Assert
 	if err == nil {
@@ -74,12 +80,12 @@ func TestEOFAfterdescr(t *testing.T) {
 	}
 }
 
-func TestEOFAfterdescrNewline(t *testing.T) {
+func TestEOFAfterDescrNewline(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr\n")
+	in := newLineReader("descr\n")
 
 	// Act
-	_, err := readTypeTests(buf)
+	_, err := readTypeTests(in)
 
 	// Assert
 	if err == nil {
@@ -89,10 +95,10 @@ func TestEOFAfterdescrNewline(t *testing.T) {
 
 func TestExtraNewline(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr\n cmd\n")
+	in := newLineReader("descr\n cmd\n")
 
 	// Act
-	_, err := readTypeTests(buf)
+	_, err := readTypeTests(in)
 
 	// Assert
 	if err == nil {
@@ -102,10 +108,10 @@ func TestExtraNewline(t *testing.T) {
 
 func TestMultipleCommands(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr\n cmd\n cmd\n cmd")
+	in := newLineReader("descr\n cmd\n cmd\n cmd")
 
 	// Act
-	tests, err := readTypeTests(buf)
+	tests, err := readTypeTests(in)
 
 	// Assert
 	if err != nil {
@@ -128,10 +134,10 @@ func TestMultipleCommands(t *testing.T) {
 
 func TestMultipleTests(t *testing.T) {
 	// Arrange
-	buf := bytes.NewBufferString("descr1\n cmd\n\ndescr2\n cmd\n cmd")
+	in := newLineReader("descr1\n cmd\n\ndescr2\n cmd\n cmd")
 
 	// Act
-	tests, err := readTypeTests(buf)
+	tests, err := readTypeTests(in)
 
 	// Assert
 	if err != nil {
@@ -161,5 +167,15 @@ func TestMultipleTests(t *testing.T) {
 	}
 }
 
-// TODO add tests for checking the outcome of tests
-// e.g. test ignore.beforeBake(), etc.
+func TestEmptyTest(t *testing.T) {
+	// Arrange
+	in := newLineReader("descr1\n\ndescr2\n cmd\n cmd")
+
+	// Act
+	_, err := readTypeTests(in)
+
+	// Assert
+	if err == nil {
+		t.Fatalf("expected error, got none")
+	}
+}

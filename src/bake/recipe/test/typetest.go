@@ -15,9 +15,8 @@ const (
 	testDirectiveIndex = 0
 )
 
-func readTypeTests(reader io.Reader) ([]*typeTest, error) {
+func readTypeTests(in strio.LineReader) ([]*typeTest, error) {
 	var err error
-	in := strio.NewLineReader(reader)
 
 	tests := make([]*typeTest, 0, 1)
 	for {
@@ -73,9 +72,6 @@ func readTypeTestCommands(in strio.LineReader) ([]testAction, error) {
 	for {
 		var line string
 		line, err = in.ChompLine()
-		if err != nil && err != io.EOF {
-			break
-		}
 
 		if len(line) == 0 {
 			if err == io.EOF {
@@ -83,6 +79,11 @@ func readTypeTestCommands(in strio.LineReader) ([]testAction, error) {
 			}
 			break
 		}
+
+		if err != nil && err != io.EOF {
+			break
+		}
+		// inv: len(line) > 0 && (err == nil || err == io.EOF)
 
 		cmd := line[testDirectiveIndex+1:]
 
@@ -102,6 +103,7 @@ func readTypeTestCommands(in strio.LineReader) ([]testAction, error) {
 	if err == nil && len(actions) == 0 {
 		err = fmt.Errorf("each test must have commands")
 	}
+
 	return actions, err
 }
 
