@@ -29,7 +29,7 @@ then
 fi
 
 # Run tests
-for TEST in tests/perm bake bake/proj diff readers strio
+for TEST in tests/perm bake bake/proj bake/recipe/test diff readers strio
 do
 	go test -i $TEST
 	go test $TEST
