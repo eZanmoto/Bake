@@ -99,7 +99,10 @@ func assert(t *testing.T, directive rune, cmd uint, expect uint,
 	//
 	// calls to smaller methods in this method
 	//     pros: dedicated methods
-	//     cons: it is better to be able to control variables locally (TODO why)
+	//     cons: it is better to be able to control variables locally, so
+	//           that if the command produces side-effects, they can check
+	//           that the side effects occurred as expected within the same
+	//           function
 	//
 	// chain method DSL (either "stateful" or "stateless"):
 	//     pros: dedicated method
