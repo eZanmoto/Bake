@@ -1,0 +1,14 @@
+creates project directory
++test -d {ProjectName}
+
+project compiles
++env GOPATH={TestDir}/{ProjectName} go install {ProjectNameLower}
+
+creates bin directory
++test -d {ProjectName}/bin
+
+creates executable
++test -f {ProjectName}/bin/{ProjectNameLower}
+
+executable runs
+={ProjectName}/bin/{ProjectNameLower}

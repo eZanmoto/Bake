@@ -105,7 +105,7 @@ func assert(t *testing.T, directive rune, cmd uint, expect uint,
 	//           function
 	//
 	// chain method DSL (either "stateful" or "stateless"):
-	//     pros: dedicated method
+	//     pros: dedicated methods
 	//           more DSL-like
 	//     cons: more complicated
 
@@ -113,9 +113,10 @@ func assert(t *testing.T, directive rune, cmd uint, expect uint,
 
 	// cmdLine is enumerated so that the actual command to be run is local
 	// to this assert method -- this is done so that changes to the command
-	// to be run will affect all callers
-	//
-	// cmdLine is 'linked' to the outcomes at the bottom of this method
+	// to be run will affect all callers. It is also helpful to have the
+	// command to be run is defined in the same method as it is run so that
+	// expected side-effects can be asserted locally. In this way, cmdLine
+	// is 'linked' to the outcomes at the bottom of this method.
 	var cmdLine string
 	switch cmd {
 	case goodCmd:
@@ -128,7 +129,7 @@ func assert(t *testing.T, directive rune, cmd uint, expect uint,
 		t.Fatalf("%d is not a valid cmd", cmd)
 	}
 	action := string(directive) + cmdLine
-	command := parseAction(t, "descr\n"+action)
+	command := parseAction(t, "descr\n"+action+"\n")
 
 	// Act
 	var result *result

@@ -1,4 +1,4 @@
-# Copyright 2012 Sean Kelleher. All rights reserved.
+# Copyright 2012-2013 Sean Kelleher. All rights reserved.
 # Use of this source code is governed by a GPL
 # license that can be found in the LICENSE file.
 
@@ -12,7 +12,7 @@
 # vet:      Runs basic safety checks on code
 # clean:    Removes the local build files
 
-.PHONY: all build tests fmt fmtincl fmtsrc runtests vet clean
+.PHONY: all build tests fmt fmtincl fmtsrc runtests testrcps vet clean
 
 # Tools
 GO=go
@@ -57,18 +57,24 @@ $(TSTDIR)/%.test: % $(TSTDIR)
 	$(GOTEST) -c $(TST)
 	mv $(notdir $(TST)).test $@
 
+bin/rcptest: fmt vet
+	$(GO) install rcptest
+
 $(TSTDIR): $(PKGDIR)
 	mkdir -p $(TSTDIR)
 
 $(PKGDIR):
 	mkdir -p $(PKGDIR)
 
-runtests: build $(TESTS)
+runtests: build $(TESTS) testrcps
 	@for TEST in $(TESTS); do \
 		go test -i $$TEST; \
 		go test $$TEST; \
 		if [ $$? -ne 0 ]; then exit 1; fi; \
 	done
+
+testrcps: bin/rcptest
+	bin/rcptest
 
 fmt: fmtincl fmtsrc
 

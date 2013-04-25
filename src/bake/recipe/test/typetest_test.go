@@ -15,9 +15,35 @@ func newLineReader(s string) strio.LineReader {
 	return strio.NewLineReader(buf)
 }
 
+func TestValidDescription(t *testing.T) {
+	// Arrange
+	in := newLineReader("descr\n")
+
+	// Act
+	tests, err := readTypeTests(in)
+
+	// Assert
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(tests) != 1 {
+		t.Fatalf("expected 1 parsed tests, got %d", len(tests))
+	}
+
+	if tests[0].descr() != "descr" {
+		t.Errorf("expected 'descr', got '%s'", tests[0].descr())
+	}
+
+	if len(tests[0].actions()) != 0 {
+		t.Errorf("expected 0 test action, got %d",
+			len(tests[0].actions()))
+	}
+}
+
 func TestValidDirective(t *testing.T) {
 	// Arrange
-	in := newLineReader("descr\n cmd")
+	in := newLineReader("descr\n cmd\n")
 
 	// Act
 	tests, err := readTypeTests(in)
@@ -41,9 +67,11 @@ func TestValidDirective(t *testing.T) {
 	}
 }
 
+// Reasons why error is expected:
+//  * descriptions can't be empty
 func TestEmptyDescr(t *testing.T) {
 	// Arrange
-	in := newLineReader("\n cmd")
+	in := newLineReader("\n cmd\n")
 
 	// Act
 	_, err := readTypeTests(in)
@@ -54,9 +82,11 @@ func TestEmptyDescr(t *testing.T) {
 	}
 }
 
+// Reasons why error is expected:
+//  * § is not a valid test directive
 func TestInvalidDirective(t *testing.T) {
 	// Arrange
-	in := newLineReader("descr\n§cmd")
+	in := newLineReader("descr\n§cmd\n")
 
 	// Act
 	_, err := readTypeTests(in)
@@ -67,6 +97,8 @@ func TestInvalidDirective(t *testing.T) {
 	}
 }
 
+// Reasons why error is expected:
+//  * a test file should end with a newline
 func TestEOFAfterDescr(t *testing.T) {
 	// Arrange
 	in := newLineReader("descr")
@@ -80,22 +112,11 @@ func TestEOFAfterDescr(t *testing.T) {
 	}
 }
 
-func TestEOFAfterDescrNewline(t *testing.T) {
+// Reasons why error is expected:
+//  * a test file should end with a newline
+func TestMissingNewline(t *testing.T) {
 	// Arrange
-	in := newLineReader("descr\n")
-
-	// Act
-	_, err := readTypeTests(in)
-
-	// Assert
-	if err == nil {
-		t.Fatalf("expected error, got none")
-	}
-}
-
-func TestExtraNewline(t *testing.T) {
-	// Arrange
-	in := newLineReader("descr\n cmd\n")
+	in := newLineReader("descr\n cmd")
 
 	// Act
 	_, err := readTypeTests(in)
@@ -108,7 +129,7 @@ func TestExtraNewline(t *testing.T) {
 
 func TestMultipleCommands(t *testing.T) {
 	// Arrange
-	in := newLineReader("descr\n cmd\n cmd\n cmd")
+	in := newLineReader("descr\n cmd\n cmd\n cmd\n")
 
 	// Act
 	tests, err := readTypeTests(in)
@@ -134,7 +155,7 @@ func TestMultipleCommands(t *testing.T) {
 
 func TestMultipleTests(t *testing.T) {
 	// Arrange
-	in := newLineReader("descr1\n cmd\n\ndescr2\n cmd\n cmd")
+	in := newLineReader("descr1\n cmd\n\ndescr2\n cmd\n cmd\n")
 
 	// Act
 	tests, err := readTypeTests(in)
@@ -169,13 +190,35 @@ func TestMultipleTests(t *testing.T) {
 
 func TestEmptyTest(t *testing.T) {
 	// Arrange
-	in := newLineReader("descr1\n\ndescr2\n cmd\n cmd")
+	in := newLineReader("descr1\n\ndescr2\n cmd\n cmd\n")
 
 	// Act
-	_, err := readTypeTests(in)
+	tests, err := readTypeTests(in)
 
 	// Assert
-	if err == nil {
-		t.Fatalf("expected error, got none")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(tests) != 2 {
+		t.Fatalf("expected 2 parsed tests, got %d", len(tests))
+	}
+
+	if tests[0].descr() != "descr1" {
+		t.Errorf("expected 'descr1', got '%s'", tests[0].descr())
+	}
+
+	if len(tests[0].actions()) != 0 {
+		t.Errorf("expected 0 test actions, got %d",
+			len(tests[0].actions()))
+	}
+
+	if tests[1].descr() != "descr2" {
+		t.Errorf("expected 'descr2', got '%s'", tests[1].descr())
+	}
+
+	if len(tests[1].actions()) != 2 {
+		t.Errorf("expected 2 test actions, got %d",
+			len(tests[1].actions()))
 	}
 }

@@ -74,6 +74,9 @@ The file as a whole is considered to be a test group, which consists of the bake
 project types specified by the file name and the tests specified within the
 file.
 
+The file should end with a newline, i.e. the last line (that which exists
+between the final `\n` and EOF) should be empty.
+
 #### Test Directives
 
 Test directives denote what the test expects the outcome of running the command

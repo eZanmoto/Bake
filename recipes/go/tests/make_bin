@@ -1,0 +1,14 @@
+make runs
++env GOPATH={TestDir}/{ProjectName} make --directory {ProjectName}
+
+made bin directory
++test -d {ProjectName}/bin
+
+made executable
++test -f {ProjectName}/bin/{ProjectNameLower}
+
+made executable runs
+={ProjectName}/bin/{ProjectNameLower}
+
+make vet runs
++env GOPATH={TestDir}/{ProjectName} make --directory {ProjectName} vet

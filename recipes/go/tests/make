@@ -1,0 +1,17 @@
+creates project directory
++test -d {ProjectName}
+
+creates Makefile
++test -f {ProjectName}/Makefile
+
+make runs
++make -C {ProjectName}
+
+make clean runs
++make -C {ProjectName} clean
+
+make clean removes build directories
++mkdir {ProjectName}/bin {ProjectName}/pkg
++make -C {ProjectName} clean
+ test ! -d {ProjectName}/bin
+ test ! -d {ProjectName}/pkg
