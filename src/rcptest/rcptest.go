@@ -11,22 +11,30 @@ import (
 	"time"
 )
 
+var (
+	testLangs = []string{"go"}
+)
+
 func main() {
 	t := time.Now()
-
 	exitStatus := 0
-	if passed, err := recipe.Test("go"); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		exitStatus = 1
-	} else if !passed {
-		exitStatus = 1
-	}
 
-	status := "ok"
-	if exitStatus != 0 {
-		status = "FAIL"
+	for _, lang := range testLangs {
+		if passed, err := recipe.Test(lang); err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			exitStatus = 1
+		} else if !passed {
+			exitStatus = 1
+		}
+
+		status := "ok"
+		if exitStatus != 0 {
+			status = "FAIL"
+		}
+
+		fmt.Printf("%s\t%s-recipe\t%.3fs\n",
+			status, lang, time.Since(t).Seconds())
 	}
-	fmt.Printf("%s\trcptest\t%.3fs\n", status, time.Since(t).Seconds())
 
 	os.Exit(exitStatus)
 }
