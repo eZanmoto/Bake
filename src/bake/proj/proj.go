@@ -9,12 +9,11 @@ type Project struct {
 	lang    string
 	types   []string
 	verbose bool
-	resolve bool
 	vars    map[string]string
 }
 
-func New(lg string, ts []string, v bool, r bool, vs map[string]string) Project {
-	return Project{lg, ts, v, r, vs}
+func New(lg string, ts []string, v bool, vs map[string]string) Project {
+	return Project{lg, ts, v, vs}
 }
 
 func (p *Project) IsOfType(t string) bool {

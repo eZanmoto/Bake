@@ -7,7 +7,6 @@ package proj
 import (
 	"bake/env"
 	"bufio"
-	"diff"
 	"fmt"
 	"io"
 	"os"
@@ -76,16 +75,7 @@ func (p *Project) genFile(src, tgt string) error {
 		if !os.IsExist(err) {
 			return err
 		}
-		if p.resolve {
-			if err := p.addUpdates(src, tgt); err != nil {
-				return err
-			}
-			if p.verbose {
-				defer fmt.Printf("Merged file '%s'\n", tgt)
-			} else {
-				defer fmt.Printf("%s\n", tgt)
-			}
-		} else if p.verbose {
+		if p.verbose {
 			fmt.Printf("File '%s' exists, skipping...\n", tgt)
 		}
 		return nil
@@ -98,13 +88,18 @@ func (p *Project) genFile(src, tgt string) error {
 	}
 	defer in.Close()
 
-	if p.verbose {
-		defer fmt.Printf("Generated file '%s'\n", tgt)
-	} else {
-		defer fmt.Printf("%s\n", tgt)
+	err = p.parse(in, out)
+	if err != nil {
+		return err
 	}
 
-	return p.parse(in, out)
+	if p.verbose {
+		fmt.Printf("Generated file '%s'\n", tgt)
+	} else {
+		fmt.Printf("%s\n", tgt)
+	}
+
+	return err
 }
 
 func (p *Project) genDir(dir string) error {
@@ -120,48 +115,6 @@ func (p *Project) genDir(dir string) error {
 	} else {
 		fmt.Printf("%s/\n", dir)
 	}
-
-	return nil
-}
-
-func (p *Project) addUpdates(src, tgt string) error {
-	tgtFile, err := os.OpenFile(tgt, os.O_RDWR, 0666)
-	if err != nil {
-		return err
-	}
-	defer tgtFile.Close()
-
-	srcFile, err := os.OpenFile(src, os.O_RDONLY, 0666)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	chs := diff.Diff(readLines(srcFile), readLines(tgtFile))
-
-	lastLineWasNew := false
-	out := bufio.NewWriter(tgtFile)
-
-	for i := 0; i < chs.Len(); i++ {
-		stat, line, err := chs.Get(i)
-		if err != nil {
-			return err
-		}
-
-		lineIsNew := stat == diff.Add
-		if lastLineWasNew != lineIsNew {
-			lastLineWasNew = lineIsNew
-
-			if lineIsNew {
-				out.WriteString("++++ <new>\n")
-			} else {
-				out.WriteString("++++ </new>\n")
-			}
-		}
-
-		out.WriteString(line + "\n")
-	}
-	out.Flush()
 
 	return nil
 }

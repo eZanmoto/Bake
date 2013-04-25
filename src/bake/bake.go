@@ -38,7 +38,6 @@ var (
 
 	verbose   = flag.Bool("v", false, "Print extra progress information")
 	langTypes = flag.String("T", "", "Print project types for language")
-	resolve   = flag.Bool("r", false, "Resolve existing file differences")
 
 	helpArgs = map[*bool]func(){
 		flag.Bool("L", false, "Print supported languages"): printLangs,
@@ -73,7 +72,7 @@ func main() {
 		}
 	}
 
-	p := proj.New(*lang, types, *verbose, *resolve, vars)
+	p := proj.New(*lang, types, *verbose, vars)
 	if err := p.GenTo(""); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(2)
