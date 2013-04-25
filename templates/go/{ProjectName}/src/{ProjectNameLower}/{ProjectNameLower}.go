@@ -39,7 +39,7 @@ func main() {{
 }}
 
 // parseFlags parses the command-line arguments to the {ProjectNameLower} executable.
-func parseFlags() {{
+func parseFlags() error {{
 	flag.Parse()
 
 	for argVal, printFunc := range helpArgs {{
@@ -54,4 +54,6 @@ func parseFlags() {{
 			return fmt.Errorf("-%s is required", argName)
 		}}
 	}}
+
+	return nil
 }}

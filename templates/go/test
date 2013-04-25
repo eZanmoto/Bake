@@ -1,4 +1,0 @@
-Incorporates testing into the build
-src/
-	{ProjectNameLower}/
-		{ProjectNameLower}_test.go
