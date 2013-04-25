@@ -349,7 +349,7 @@ func bakeWithLog(name, lang string, types []string, out Printfer) error {
 	}
 
 	cmd := exec.Command(
-		"bake",
+		path.Join(os.Getenv("BAKE"), "bin", "bake"),
 		"-v",
 		"-o", "Owner",
 		"-l", lang,
