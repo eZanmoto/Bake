@@ -29,6 +29,18 @@ then
 fi
 
 # Run tests
+make bin/rcptest
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
+
+bin/rcptest
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
+
 for TEST in tests/perm bake bake/proj bake/recipe/test diff readers strio
 do
 	go test -i $TEST
