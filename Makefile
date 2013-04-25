@@ -12,8 +12,6 @@
 # vet:      Runs basic safety checks on code
 # clean:    Removes the local build files
 
-.PHONY: all build tests fmt fmtincl fmtsrc runtests testrcps vet clean
-
 # Tools
 GO=go
 GOTEST=$(GO) test
@@ -32,11 +30,13 @@ TARGET=bake
 TSTDIR=$(PKGDIR)/tst
 TESTS=tests/perm bake bake/proj bake/recipe/test diff readers strio
 
+.PHONY: all
 all: clean build
 
 # fmt before vet because fmt and vet catch the same errors, but vet outputs them
 # in a way that doesn't work with Vim's Quickfix window (Vim doesn't open the
 # correct file).
+.PHONY: build
 build: fmt vet bin/$(TARGET)
 
 bin/$(TARGET):
@@ -47,6 +47,7 @@ bin/$(TARGET):
 	esac
 	$(GO) install $(TARGET)
 
+.PHONY: tests
 tests: build $(patsubst %,$(TSTDIR)/%.test,$(TESTS))
 	echo source $(GOROOT)/src/pkg/runtime/runtime-gdb.py > $(TSTDIR)/.gdbinit
 
@@ -66,6 +67,7 @@ $(TSTDIR): $(PKGDIR)
 $(PKGDIR):
 	mkdir -p $(PKGDIR)
 
+.PHONY: runtests
 runtests: build $(TESTS) testrcps
 	@for TEST in $(TESTS); do \
 		go test -i $$TEST; \
@@ -73,21 +75,27 @@ runtests: build $(TESTS) testrcps
 		if [ $$? -ne 0 ]; then exit 1; fi; \
 	done
 
+.PHONY: testrcps
 testrcps: bin/rcptest
 	bin/rcptest
 
+.PHONY: fmt
 fmt: fmtincl fmtsrc
 
+.PHONY: fmtincl
 fmtincl:
 	$(GO) install fmtincl
 	./fmtincl.sh
 
+.PHONY: fmtsrc
 fmtsrc:
 	gofmt -d -s $(SRCDIR)
 	gofmt -s -w $(SRCDIR)
 
+.PHONY: vet
 vet:
 	$(GO) tool vet $(SRCDIR)
 
+.PHONY: clean
 clean:
 	rm -rf $(BINDIR) $(PKGDIR)
