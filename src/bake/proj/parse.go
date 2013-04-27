@@ -78,7 +78,7 @@ func (p *Project) parseText(in *scanner.Scanner, out *bufio.Writer, s parseStatu
 					"Expected directive, got EOF")
 			case lDelim:
 				readChar = true
-			case condEnd, ':':
+			case condEnd, condElsif:
 				finished = true
 			default:
 				if err := p.parseDirect(in, out, s); err != nil {
