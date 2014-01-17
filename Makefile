@@ -7,7 +7,7 @@
 # all:      Make a clean build
 # build:    Build the bake executable
 # tests:    Build the debuggable testing files
-# runtests: Runs all tests
+# check:    Runs all tests
 # fmt:      Checks code and resource formatting
 # vet:      Runs basic safety checks on code
 # clean:    Removes the local build files
@@ -67,8 +67,8 @@ $(TSTDIR): $(PKGDIR)
 $(PKGDIR):
 	mkdir -p $(PKGDIR)
 
-.PHONY: runtests
-runtests: build $(TESTS) testrcps
+.PHONY: check
+check: build $(TESTS) testrcps
 	@for TEST in $(TESTS); do \
 		go test -i $$TEST; \
 		go test $$TEST; \
