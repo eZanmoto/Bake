@@ -31,3 +31,36 @@ func testExpand(t *testing.T, d *Dict, before, after string) {
 			before, after, result)
 	}
 }
+
+func TestexpandEmptyVar(t *testing.T) {
+	expandFail(t, &Dict{}, "{}")
+}
+
+func expandFail(t *testing.T, d *Dict, value string) {
+	_, err := d.ExpandStr(value)
+	if err == nil {
+		t.Fatalf("Expected error while parsing '%s', got none", value)
+	}
+}
+
+func TestExpandUnknownName(t *testing.T) {
+	expandFail(t, &Dict{}, "{x}")
+}
+
+func TestExpandDoubleLBrace(t *testing.T) {
+	padding := " "
+	d := &Dict{}
+
+	testExpand(t, d, "{{"+padding, "{"+padding)
+	testExpand(t, d, padding+"{{"+padding, padding+"{"+padding)
+	testExpand(t, d, padding+"{{", padding+"{")
+}
+
+func TestParseSingleRBrace(t *testing.T) {
+	padding := " "
+	d := &Dict{}
+
+	expandFail(t, d, "}"+padding)
+	expandFail(t, d, padding+"}"+padding)
+	ExpandFail(t, d, padding+"}")
+}
