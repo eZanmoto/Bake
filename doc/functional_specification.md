@@ -159,7 +159,7 @@ listing the directory path for each file separately.
 
 See the template\_language.md document for a specification of the template
 language used by bake. When generating files, bake passes a dictionary
-consisting of the supplied project types mapping to `nil` and variables mapping
+consisting of the supplied project types mapping to `""` variables mapping
 to their values. Project types begin with lowercase letters and variables begin
 with uppercase letters to avoid namespace collisions.
 
