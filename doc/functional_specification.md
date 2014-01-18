@@ -155,90 +155,13 @@ The reason for this approach is its minimalist yet concise nature, it is
 relatively easy to read and parse. The use of indentation removes the need for
 listing the directory path for each file separately.
 
-#### Names
+#### Template File Format
 
-The only characters allowed in inserts and includes are capital and lowercase
-letters, and numbers. Variable and project names in inserts and includes should
-be written in pascal case (each term in the name should be lowercase, starting
-with an uppercase letter, such as ApplesAndOranges). Names are case-sensitive.
-Variable names must start with an uppercase letter.
-
-#### Outputting Reserved Characters
-
-`{` characters must be escaped by using `{{`, so that they won't be interpreted
-as the beginning of an insert For consistency, `}` also be escaped, using `}}`.
-
-#### Project Variable Inserts
-
-This type of variable inserts the associated required variable, or outputs an
-error if the named variable does not exist. The form of a project variable
-insert is as follows:
-
-    This is the {ProjectName} project.
-
-#### Conditional Inserts
-
-Conditional inserts allow text to be included if its conditions are met. They
-are delimited by curly braces, like variable inserts, but also have a '?' at the
-start of the directive. The parts of a conditional insert are as follows:
-
-    {?if}insert-0{:elseif-1}insert-1...{:elseif-2}insert-n{:}default-insert{!}
-
-`if` and `elseif-1`...`elseif-n` are labels representing conditionals. The first
-conditional that evaluates to true will have the corresponding insert section
-processed and inserted, or else the `default-insert` if no conditionals
-evaluated to true and the `:` directive is encountered.
-
-A conditional directive on a line by itself will have the following newline
-skipped.
-
-The following are examples of conditional inserts:
-
-    {?Email}email:         {Email}{!}
-    {?Email}description:   Email {Email} with any issues.{!}
-    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{!}
-
-A multi-line variation would be the following:
-
-    {?Email}
-    email:         {Email}
-    description:   Email {Email} with any issues.
-    {!}
-    install:       {?make}make{?Prefix} --prefix={Prefix}{?}{:ant}ant{:}none{!}
-
-Conditional inserts can be nested.
-
-##### Conditionals
-
-A conditional is a list of at least one or more variable names or project types,
-joined with logical operators or grouped with parentheses. Variable queries
-start with a capital letter and equate to 'true' in a condition if the variable
-they name was given a value. The following example would output
-'<me@example.com>' if bake was run with -Email having a value of
-'me@example.com', or would output nothing if -Email was not given a value.
-
-    {?Email}<{Email}>{!}
-
-Project type queries start with a lowercase letter and equate to 'true' in a
-conditional if the project being generated is of that type. The following
-example would output the contained text if the project has a type of 'bin'.
-
-    {?bin}This project produces an executable.{!}
-
-You can combine queries with `&`s and `|`s, representing logical AND and OR
-respectively. `&` has a higher precedence than `|`, so the following insert will
-be processed if the Email variable is present, or if the project is both of type
-make and of type test, or if the project is of type bin.
-
-    {?Email|make&test|bin}Included{!}
-
-Queries can be grouped with parentheses to affect the order of evaluation. The
-following insert will be included if Email is present or make is a type, and
-test or bin is a type.
-
-    {?(Email|make)&(test|bin)}Included{!}
-
-Logical not is represented with `!` and has the highest precedence.
+See the template\_language.md document for a specification of the template
+language used by bake. When generating files, bake passes a dictionary
+consisting of the supplied project types mapping to `nil` and variables mapping
+to their values. Project types begin with lowercase letters and variables begin
+with uppercase letters to avoid namespace collisions.
 
 ### Project Types
 
