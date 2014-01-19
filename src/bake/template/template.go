@@ -229,11 +229,11 @@ func (d *Dict) expandCond(in *scanner.Scanner, writer *bufio.Writer) error {
 }
 
 func (d *Dict) evalBool(in *scanner.Scanner) (bool, error) {
-	if name, err := readVar(in); err != nil {
+	name, err := readVar(in)
+	if err != nil {
 		return false, err
-	} else {
-		return d.hasVar(name), match(in, rDelim)
 	}
+	return d.hasVar(name), match(in, rDelim)
 }
 
 func (d *Dict) hasVar(name string) bool {
