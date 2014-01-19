@@ -15,6 +15,8 @@ import (
 const (
 	lDelim    = '{' // Denotes the start of a template directive
 	rDelim    = '}' // Denotes the end of a template directive
+	condDelim = '?' // Denotes the start/end of a conditional insert
+	condElsif = ':' // Denotes the else of a conditional insert
 )
 
 type Dict map[string]string
@@ -36,81 +38,82 @@ func (d *Dict) Expand(reader io.Reader, writer io.Writer) error {
 	var in scanner.Scanner
 	in.Init(reader)
 
-	err := d.expandText(&in, out)
+	err := d.copyUntilDelim(&in, out)
+	for err == nil && !isEOF(&in) {
+		if err = d.expandDirective(&in, out); err != nil {
+			break
+		}
+		err = d.copyUntilDelim(&in, out)
+	}
 	if err != nil {
 		return err
 	}
 
-	if !isEOF(&in) {
-		return parseErr(&in, "Unexpected closing statement: '%c'", in.Peek())
-	}
-
 	return out.Flush()
-}
-
-// Copy text until an escape sequence (EOF or directive) occurs.
-//
-// `out` may be `nil` to indicate that output is to be discarded, in which case
-// errors are ignored.
-func (d *Dict) expandText(in *scanner.Scanner, out *bufio.Writer) error {
-	for finished := isEOF(in); !finished; finished = isEOF(in) {
-		copyChar := false
-
-		switch in.Peek() {
-		case lDelim:
-			in.Next()
-
-			switch in.Peek() {
-			case scanner.EOF:
-				return parseErr(in,
-					"Expected directive, got EOF")
-			case lDelim:
-				copyChar = true
-			default:
-				if err := d.expandVar(in, out); err != nil {
-					return err
-				}
-			}
-		case rDelim:
-			in.Next()
-
-			switch in.Peek() {
-			case scanner.EOF:
-				return parseErr(in, "Expected '%c', got EOF",
-					rDelim)
-			case rDelim:
-				copyChar = true
-			default:
-				return parseErr(in, "Expected '%c', got '%c'",
-					rDelim, in.Peek())
-			}
-		default:
-			copyChar = true
-		}
-
-		if copyChar {
-			c := in.Next()
-			if out != nil {
-				if n, err := out.WriteRune(c); err == nil && n < 1 {
-					return fmt.Errorf("Couldn't write: %c", c)
-				} else if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func isEOF(in *scanner.Scanner) bool {
 	return in.Peek() == scanner.EOF
 }
 
+func (d *Dict) copyUntilDelim(in *scanner.Scanner, out *bufio.Writer) error {
+	var err error
+	for err == nil && !isEOF(in) && in.Peek() != lDelim && in.Peek() != rDelim {
+		err = copyNext(in, out)
+	}
+	return err
+}
+
+func copyNext(in *scanner.Scanner, out *bufio.Writer) error {
+	c := in.Next()
+	if n, err := out.WriteRune(c); err == nil && n < 1 {
+		return fmt.Errorf("Couldn't write: %c", c)
+	} else if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Dict) expandDirective(in *scanner.Scanner, out *bufio.Writer) error {
+	var err error
+
+	c := in.Next()
+	switch c {
+	case lDelim:
+		if in.Peek() == lDelim {
+			return copyNext(in, out)
+		}
+		err = d.expandVar(in, out)
+	case rDelim:
+		err = writeString(out, "}")
+	case scanner.EOF:
+		err = parseErr(in, "Expected '%c' or '%c', got EOF", lDelim, rDelim)
+	default:
+		err = parseErr(in, "Expected '%c' or '%c', got '%c'", lDelim, rDelim, c)
+	}
+
+	if err == nil {
+		err = match(in, rDelim)
+	}
+
+	return err
+}
+
+// Consume the next rune in `n` and return an error if it's not `r`.
+func match(in *scanner.Scanner, r rune) error {
+	var err error
+	if c := in.Next(); c == scanner.EOF {
+		err = parseErr(in, "Expected '%c', got EOF", r)
+	} else if c != r {
+		err = parseErr(in, "Expected '%c', got '%c'", r, c)
+	}
+	return err
+}
+
 func parseErr(s *scanner.Scanner, msg string, params ...interface{}) error {
 	p := s.Pos()
 	text := fmt.Sprintf(msg, params...)
-	return fmt.Errorf("%s[%d:%d] %s", p.Filename, p.Line, p.Column, text)
+	return fmt.Errorf("%s[%d:%d] %s", p.Filename, p.Line, p.Column-1, text)
 }
 
 func (d *Dict) expandVar(in *scanner.Scanner, out *bufio.Writer) error {
@@ -119,25 +122,11 @@ func (d *Dict) expandVar(in *scanner.Scanner, out *bufio.Writer) error {
 		return err
 	}
 
-	if err = match(in, rDelim); err != nil {
-		return err
+	val, ok := (*d)[name]
+	if !ok {
+		return parseErr(in, "Unknown variable '%s'", name)
 	}
-
-	if out != nil {
-		val, ok := (*d)[name]
-		if !ok {
-			return parseErr(in, "Unknown variable '%s'", name)
-		}
-
-		if n, err := out.WriteString(val); n != len(val) {
-			return parseErr(in, "Only wrote %d characters of '%s'(%d)",
-				n, val, len(val))
-		} else if err != nil {
-			return err
-		}
-	}
-
-	return out.Flush()
+	return writeString(out, val)
 }
 
 func readVar(in *scanner.Scanner) (s string, err error) {
@@ -162,15 +151,11 @@ func isVarRune(r rune) bool {
 		'0' <= r && r <= '9'
 }
 
-// Consume the next rune in `n` and return an error if it's not `r`.
-func match(in *scanner.Scanner, r rune) error {
+func writeString(out *bufio.Writer, s string) error {
+	n := 0
 	var err error
-
-	if c := in.Next(); c == scanner.EOF {
-		err = parseErr(in, "Expected '%c', got EOF", r)
-	} else if c != r {
-		err = parseErr(in, "Expected '%c', got '%c'", r, c)
+	if n, err = out.WriteString(s); err == nil && n != len(s) {
+		err = fmt.Errorf("Only wrote %d characters of '%s'(%d)", n, s, len(s))
 	}
-
 	return err
 }
