@@ -65,6 +65,16 @@ func TestExpandSingleRBrace(t *testing.T) {
 	expandFail(t, d, padding+"}"+padding)
 }
 
+func TestExpandDoubleRBrace(t *testing.T) {
+	padding := " "
+	d := &Dict{}
+
+	testExpand(t, d, "}}", "}")
+	testExpand(t, d, "}}"+padding, "}"+padding)
+	testExpand(t, d, padding+"}}", padding+"}")
+	testExpand(t, d, padding+"}}"+padding, padding+"}"+padding)
+}
+
 func TestExpandSimpleCond(t *testing.T) {
 	d := &Dict{"x": "a", "y": ""}
 
