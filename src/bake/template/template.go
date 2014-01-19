@@ -208,9 +208,15 @@ func (d *Dict) expandCond(in *scanner.Scanner, writer *bufio.Writer) error {
 				}
 			case condElsif:
 				in.Next()
-				expand, err = d.evalBool(in)
+				if in.Peek() == rDelim {
+					in.Next()
+					expand = true
+				} else {
+					expand, err = d.evalBool(in)
+				}
 			default:
-				if err = d.expandVar(in, out); err == nil {
+				err = d.expandVar(in, out)
+				if out == nil || err == nil {
 					err = match(in, rDelim)
 				}
 			}

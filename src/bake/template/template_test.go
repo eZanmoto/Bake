@@ -66,9 +66,9 @@ func TestExpandSingleRBrace(t *testing.T) {
 }
 
 func TestExpandSimpleCond(t *testing.T) {
-	d := &Dict{"x": "1", "y": ""}
+	d := &Dict{"x": "a", "y": ""}
 
-	testExpand(t, d, "<{?x}{x}{?}>", "<1>")
+	testExpand(t, d, "<{?x}{x}{?}>", "<a>")
 
 	testExpand(t, d, "<{?x}x{?}>", "<x>")
 	testExpand(t, d, "<{?y}y{?}>", "<y>")
@@ -77,4 +77,19 @@ func TestExpandSimpleCond(t *testing.T) {
 	testExpand(t, d, "<{?x}x{?y}y{?}{?}>", "<xy>")
 	testExpand(t, d, "<{?x}x{?z}z{?}{?}>", "<x>")
 	testExpand(t, d, "<{?z}z{?y}y{?}{?}>", "<>")
+}
+
+func TestExpandCondElse(t *testing.T) {
+	d := &Dict{"x": "a", "y": ""}
+
+	testExpand(t, d, "<{?x}{x}{:}b{?}>", "<a>")
+	testExpand(t, d, "<{?z}{z}{:}b{?}>", "<b>")
+
+	testExpand(t, d, "<{?x}1{:}2{?}>", "<1>")
+	testExpand(t, d, "<{?z}1{:}2{?}>", "<2>")
+
+	testExpand(t, d, "<{?x}{?y}1{:}2{?}{:}{?y}3{:}4{?}{?}>", "<1>")
+	testExpand(t, d, "<{?x}{?z}1{:}2{?}{:}{?y}3{:}4{?}{?}>", "<2>")
+	testExpand(t, d, "<{?z}{?z}1{:}2{?}{:}{?y}3{:}4{?}{?}>", "<3>")
+	testExpand(t, d, "<{?z}{?z}1{:}2{?}{:}{?z}3{:}4{?}{?}>", "<4>")
 }
