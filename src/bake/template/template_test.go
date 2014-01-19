@@ -9,11 +9,9 @@ import (
 )
 
 func TestExpandVar(t *testing.T) {
-	// Arrange
 	before, after := "a", "b"
 	d := &Dict{before: after}
 
-	// Act & Assert
 	testExpand(t, d, before, before)
 	testExpand(t, d, "{"+before+"}", after)
 	testExpand(t, d, before+"{"+before+"}", before+after)
@@ -51,16 +49,32 @@ func TestExpandDoubleLBrace(t *testing.T) {
 	padding := " "
 	d := &Dict{}
 
+	testExpand(t, d, "{{", "{")
 	testExpand(t, d, "{{"+padding, "{"+padding)
-	testExpand(t, d, padding+"{{"+padding, padding+"{"+padding)
 	testExpand(t, d, padding+"{{", padding+"{")
+	testExpand(t, d, padding+"{{"+padding, padding+"{"+padding)
 }
 
-func TestParseSingleRBrace(t *testing.T) {
+func TestExpandSingleRBrace(t *testing.T) {
 	padding := " "
 	d := &Dict{}
 
+	expandFail(t, d, "}")
 	expandFail(t, d, "}"+padding)
+	expandFail(t, d, padding+"}")
 	expandFail(t, d, padding+"}"+padding)
-	ExpandFail(t, d, padding+"}")
+}
+
+func TestExpandSimpleCond(t *testing.T) {
+	d := &Dict{"x": "1", "y": ""}
+
+	testExpand(t, d, "<{?x}{x}{?}>", "<1>")
+
+	testExpand(t, d, "<{?x}x{?}>", "<x>")
+	testExpand(t, d, "<{?y}y{?}>", "<y>")
+	testExpand(t, d, "<{?z}z{?}>", "<>")
+
+	testExpand(t, d, "<{?x}x{?y}y{?}{?}>", "<xy>")
+	testExpand(t, d, "<{?x}x{?z}z{?}{?}>", "<x>")
+	testExpand(t, d, "<{?z}z{?y}y{?}{?}>", "<>")
 }
