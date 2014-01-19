@@ -71,7 +71,8 @@ $(PKGDIR):
 check: build $(TESTS) testrcps
 	@for TEST in $(TESTS); do \
 		go test -i $$TEST; \
-		go test $$TEST; \
+		go test $$TEST | sed \
+			s@'\('`basename $$TEST`_test.go'\)'@src/$${TEST}/\\1@ ; \
 		if [ $$? -ne 0 ]; then exit 1; fi; \
 	done
 
