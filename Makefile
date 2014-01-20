@@ -28,7 +28,7 @@ TARGET=bake
 
 # Testing
 TSTDIR=$(PKGDIR)/tst
-TESTS=tests/perm readers strio bake/proj bake/template bake/recipe/test bake
+TESTS=readers strio bake/template bake/recipe/test bake/proj bake
 
 .PHONY: all
 all: clean build
