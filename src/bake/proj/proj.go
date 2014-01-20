@@ -5,15 +5,27 @@
 // Package proj provides project generation functionality.
 package proj
 
+import (
+	"bake/template"
+)
+
 type Project struct {
 	lang    string
 	types   []string
 	verbose bool
 	vars    map[string]string
+	dict    *template.Dict
 }
 
 func New(lg string, ts []string, v bool, vs map[string]string) Project {
-	return Project{lg, ts, v, vs}
+	d := template.Dict{}
+	for name, val := range vs {
+		d[name] = val
+	}
+	for _, t := range ts {
+		d[t] = ""
+	}
+	return Project{lg, ts, v, vs, &d}
 }
 
 func (p *Project) IsOfType(t string) bool {

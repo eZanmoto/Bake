@@ -49,7 +49,7 @@ func (p *Project) genDirConts(dir *fsNode, srcDir, tgtDir string) error {
 	for _, node := range dir.children {
 		src := path.Join(srcDir, node.name)
 
-		tgtName, err := p.parseStr(node.name)
+		tgtName, err := p.dict.ExpandStr(node.name)
 		if err != nil {
 			return err
 		}
@@ -88,9 +88,9 @@ func (p *Project) genFile(src, tgt string) error {
 	}
 	defer in.Close()
 
-	err = p.parse(in, out)
+	err = p.dict.Expand(in, out)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s%v", src, err)
 	}
 
 	if p.verbose {
