@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+func TestExpandEmpty(t *testing.T) {
+	testExpand(t, &Dict{}, "", "")
+}
+
 func TestExpandVar(t *testing.T) {
 	before, after := "a", "b"
 	d := &Dict{before: after}
@@ -79,6 +83,14 @@ func TestExpandSimpleCond(t *testing.T) {
 	d := &Dict{"x": "a", "y": ""}
 
 	testExpand(t, d, "<{?x}{x}{?}>", "<a>")
+	testExpand(t, d, "<{?x}c{x}{?}>", "<ca>")
+	testExpand(t, d, "<{?x}{x}t{?}>", "<at>")
+	testExpand(t, d, "<{?x}c{x}t{?}>", "<cat>")
+
+	testExpand(t, d, "<{?z}{x}{?}>", "<>")
+	testExpand(t, d, "<{?z}c{x}{?}>", "<>")
+	testExpand(t, d, "<{?z}{x}t{?}>", "<>")
+	testExpand(t, d, "<{?z}c{x}t{?}>", "<>")
 
 	testExpand(t, d, "<{?x}x{?}>", "<x>")
 	testExpand(t, d, "<{?y}y{?}>", "<y>")

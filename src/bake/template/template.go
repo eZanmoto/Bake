@@ -174,15 +174,14 @@ func writeString(out *bufio.Writer, s string) error {
 }
 
 func (d *Dict) expandCond(in *scanner.Scanner, writer *bufio.Writer) error {
-	expanded := false
-
 	expand, err := d.evalBool(in)
 	if err != nil {
 		return err
 	}
 
+	var out *bufio.Writer
+	expanded := false
 	for err == nil && !isEOF(in) {
-		var out *bufio.Writer
 		if !expanded && expand {
 			out = writer
 			expanded = true
@@ -208,6 +207,7 @@ func (d *Dict) expandCond(in *scanner.Scanner, writer *bufio.Writer) error {
 				}
 			case condElsif:
 				in.Next()
+				out = nil
 				if in.Peek() == rDelim {
 					in.Next()
 					expand = true
