@@ -2,6 +2,7 @@
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
+// Package template provides an implementation of the bake template language.
 package template
 
 import (
