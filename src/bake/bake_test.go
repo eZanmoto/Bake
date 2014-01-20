@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"tests/perm"
 )
 
 var (
@@ -161,11 +160,8 @@ func TestGenProjDir(t *testing.T) {
 		t.Fatalf("Error changing to directory: %v", err)
 	}
 
-	nameGen := perm.NewStringPermuter("abc")
-	nameGen.Permute() // Skip empty name
-
 	for _, lang := range supportedLangs {
-		name := nameGen.Permute()
+		name := "Project"
 
 		if e := os.RemoveAll(name); e != nil && !os.IsNotExist(e) {
 			t.Fatalf("Error removing '%s': %v", name, e)

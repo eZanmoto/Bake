@@ -41,7 +41,7 @@ then
 	exit 1
 fi
 
-for TEST in tests/perm bake bake/proj bake/recipe/test readers strio
+for TEST in readers strio bake/template bake/recipe/test bake/proj bake
 do
 	go test -i $TEST
 	go test $TEST
