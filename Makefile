@@ -28,7 +28,8 @@ TARGET=bake
 
 # Testing
 TSTDIR=$(PKGDIR)/tst
-TESTS=readers strio bake/template bake/recipe/test bake/proj bake
+TESTS=$(patsubst $(SRCDIR)/%,%, \
+	$(shell find $(SRCDIR) -name "*_test.go" -exec dirname {} \; | uniq))
 
 .PHONY: all
 all: clean build
