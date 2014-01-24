@@ -4,9 +4,6 @@
 
 package proj
 
-// fsnode.go contains the definition of the fsNode type, which represents a
-// filesystem file or directory.
-
 import (
 	"sort"
 	"strings"
