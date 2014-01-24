@@ -115,3 +115,19 @@ func TestExpandCondElse(t *testing.T) {
 	testExpand(t, d, "<{?z}{?z}1{:}2{?}{:}{?y}3{:}4{?}{?}>", "<3>")
 	testExpand(t, d, "<{?z}{?z}1{:}2{?}{:}{?z}3{:}4{?}{?}>", "<4>")
 }
+
+func TestExpandCondElsif(t *testing.T) {
+	d := &Dict{"x": "a"}
+
+	testExpand(t, d, "<{?z}1{:z}2{:z}3{?}>", "<>")
+
+	testExpand(t, d, "<{?x}1{:z}2{:z}3{:}4{?}>", "<1>")
+	testExpand(t, d, "<{?z}1{:x}2{:z}3{:}4{?}>", "<2>")
+	testExpand(t, d, "<{?z}1{:z}2{:x}3{:}4{?}>", "<3>")
+	testExpand(t, d, "<{?z}1{:z}2{:z}3{:}4{?}>", "<4>")
+
+	testExpand(t, d, "<{?x}{x}{:z}2{:z}3{:}4{?}>", "<a>")
+	testExpand(t, d, "<{?z}1{:x}{x}{:z}3{:}4{?}>", "<a>")
+	testExpand(t, d, "<{?z}1{:z}2{:x}{x}{:}4{?}>", "<a>")
+	testExpand(t, d, "<{?z}1{:z}2{:z}3{:}{x}{?}>", "<a>")
+}
