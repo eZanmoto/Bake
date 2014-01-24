@@ -9,5 +9,6 @@ before_install:
 install: go install bake
 
 script:
+  - make fmt
   - make tests
   - make check
