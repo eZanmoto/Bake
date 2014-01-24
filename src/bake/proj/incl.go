@@ -71,8 +71,6 @@ func (n *fsNode) String() string {
 	return s
 }
 
-type NodePath []*fsNode
-
 func ParseInclFiles(paths ...string) (*fsNode, error) {
 	root := newRootDir()
 
