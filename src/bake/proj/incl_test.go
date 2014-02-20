@@ -1,10 +1,11 @@
-// Copyright 2012 Sean Kelleher. All rights reserved.
+// Copyright 2012-2014 Sean Kelleher. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
 package proj
 
 import (
+	"fs"
 	"io"
 	"strings"
 	"testing"
@@ -12,97 +13,97 @@ import (
 
 type inclTest struct {
 	source   string
-	expected *fsNode
+	expected *fs.Node
 }
 
 var (
 	inclTests = []inclTest{
 		{"",
-			&fsNode{"", []*fsNode{}},
+			fs.NewDir(""),
 		},
 
 		{"" +
 			"a",
-			&fsNode{"", []*fsNode{
-				{"a", nil},
-			}},
+			fs.NewDir("",
+				fs.NewFile("a"),
+			),
 		},
 
 		{"" +
 			"a\n",
-			&fsNode{"", []*fsNode{
-				{"a", nil},
-			}},
+			fs.NewDir("",
+				fs.NewFile("a"),
+			),
 		},
 
 		{"" +
 			"a/\n" +
 			"\tb",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", nil},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewFile("b"),
+				),
+			),
 		},
 
 		{"" +
 			"a/\n" +
 			"\tb\n",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", nil},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewFile("b"),
+				),
+			),
 		},
 
 		{"" +
 			"a/\n" +
 			"\tb\n" +
 			"\tc",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", nil},
-					{"c", nil},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewFile("b"),
+					fs.NewFile("c"),
+				),
+			),
 		},
 
 		{"" +
 			"a/\n" +
 			"\tb\n" +
 			"\tc\n",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", nil},
-					{"c", nil},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewFile("b"),
+					fs.NewFile("c"),
+				),
+			),
 		},
 
 		{"" +
 			"a/\n" +
 			"\tb/\n" +
 			"\t\tc",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", []*fsNode{
-						{"c", nil},
-					}},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewDir("b",
+						fs.NewFile("c"),
+					),
+				),
+			),
 		},
 
 		{"" +
 			"a/\n" +
 			"\tb/\n" +
 			"\t\tc\n",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", []*fsNode{
-						{"c", nil},
-					}},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewDir("b",
+						fs.NewFile("c"),
+					),
+				),
+			),
 		},
 
 		{"" +
@@ -110,14 +111,14 @@ var (
 			"\tb/\n" +
 			"\t\tc\n" +
 			"\td",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", []*fsNode{
-						{"c", nil},
-					}},
-					{"d", nil},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewDir("b",
+						fs.NewFile("c"),
+					),
+					fs.NewFile("d"),
+				),
+			),
 		},
 
 		{"" +
@@ -125,14 +126,14 @@ var (
 			"\tb/\n" +
 			"\t\tc\n" +
 			"\td\n",
-			&fsNode{"", []*fsNode{
-				{"a", []*fsNode{
-					{"b", []*fsNode{
-						{"c", nil},
-					}},
-					{"d", nil},
-				}},
-			}},
+			fs.NewDir("",
+				fs.NewDir("a",
+					fs.NewDir("b",
+						fs.NewFile("c"),
+					),
+					fs.NewFile("d"),
+				),
+			),
 		},
 	}
 )
@@ -142,7 +143,7 @@ func TestReadIncl(t *testing.T) {
 		result, err := parseIncl(strings.NewReader(test.source))
 		if err != nil {
 			t.Errorf("Failed: %v", err)
-		} else if !result.equals(test.expected) {
+		} else if !equal(result, test.expected) {
 			t.Errorf("\nParsed:\n%s\nExpected:\n%s\nGot:\n%s",
 				test.source, test.expected.String(),
 				result.String())
@@ -150,31 +151,31 @@ func TestReadIncl(t *testing.T) {
 	}
 }
 
-func parseIncl(reader io.Reader) (*fsNode, error) {
-	n := newRootDir()
-	if err := n.addIncl(reader); err != nil {
+func parseIncl(reader io.Reader) (*fs.Node, error) {
+	n := fs.NewDir("")
+	if err := addIncl(n, reader); err != nil {
 		return nil, err
 	}
 	return n, nil
 }
 
-func (n *fsNode) equals(m *fsNode) bool {
-	if n.name != m.name {
+func equal(n *fs.Node, m *fs.Node) bool {
+	if n.Name() != m.Name() {
 		return false
 	}
 
-	if n.isDir() != m.isDir() {
+	if n.IsDir() != m.IsDir() {
 		return false
 	}
 
-	if !n.isDir() {
+	if !n.IsDir() {
 		return true
 	}
 
-	for _, nChild := range n.children {
-		mChild, ok := m.childNamed(nChild.name)
+	for _, nChild := range n.Children() {
+		mChild, ok := m.ChildNamed(nChild.Name())
 
-		if !ok || !nChild.equals(mChild) {
+		if !ok || !equal(nChild, mChild) {
 			return false
 		}
 	}
@@ -215,31 +216,31 @@ func TestBadIndentation(t *testing.T) {
 }
 
 func TestAddIncl(t *testing.T) {
-	n := newRootDir()
+	n := fs.NewDir("")
 	sources := []string{
 		"a/\n\tb/\n\t\tc\n",
 		"a/\n\tb/\n\t\td\n",
 		"a/\n\te/\n\t\tf\n",
 	}
-	expect := &fsNode{"", []*fsNode{
-		{"a", []*fsNode{
-			{"b", []*fsNode{
-				{"c", nil},
-				{"d", nil},
-			}},
-			{"e", []*fsNode{
-				{"f", nil},
-			}},
-		}},
-	}}
+	expect := fs.NewDir("",
+		fs.NewDir("a",
+			fs.NewDir("b",
+				fs.NewFile("c"),
+				fs.NewFile("d"),
+			),
+			fs.NewDir("e",
+				fs.NewFile("f"),
+			),
+		),
+	)
 
 	for _, source := range sources {
-		if err := n.addIncl(strings.NewReader(source)); err != nil {
+		if err := addIncl(n, strings.NewReader(source)); err != nil {
 			t.Errorf("Failed: %v", err)
 		}
 	}
 
-	if !expect.equals(n) {
+	if !equal(n, expect) {
 		t.Errorf("Expected:\n%s\nGot:\n%s", expect.String(), n.String())
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2012 Sean Kelleher. All rights reserved.
+// Copyright 2012-2014 Sean Kelleher. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
@@ -7,17 +7,23 @@ package proj
 import (
 	"bufio"
 	"fmt"
+	"fs"
 	"io"
 	"os"
 	"strings"
 )
 
 const (
-	inclDirSep = '/' // This is independent of the actual platform
+	// A suffix that denotes a filesystem directory in include files, and is
+	// independent of the actual directory separator used by the runtime
+	// platform.
+	inclDirSep = '/'
 )
 
-func ParseInclFiles(paths ...string) (*fsNode, error) {
-	root := newRootDir()
+// Return a filesystem description composed of files described by each include
+// file in `paths`.
+func ParseInclFiles(paths ...string) (*fs.Node, error) {
+	root := fs.NewDir("")
 
 	for _, path := range paths {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0666)
@@ -33,7 +39,7 @@ func ParseInclFiles(paths ...string) (*fsNode, error) {
 			return nil, err
 		}
 
-		if err = root.addIncl(in); err != nil {
+		if err = addIncl(root, in); err != nil {
 			return nil, err
 		}
 	}
@@ -41,9 +47,10 @@ func ParseInclFiles(paths ...string) (*fsNode, error) {
 	return root, nil
 }
 
-func (n *fsNode) addIncl(reader io.Reader) error {
+// Add files described in the `reader` stream to the root node `n`.
+func addIncl(n *fs.Node, reader io.Reader) error {
 	in := bufio.NewReader(reader)
-	nodePath := []*fsNode{n}
+	nodePath := []*fs.Node{n}
 	enterDir := false
 
 	for {
@@ -68,17 +75,17 @@ func (n *fsNode) addIncl(reader io.Reader) error {
 
 		name := strings.TrimRight(line, "\n\r")[lvl:]
 		if len(name) == 0 {
-			return fmt.Errorf("Empty name in %s/", curDir.name)
+			return fmt.Errorf("Empty name in %s/", curDir.Name())
 		} else if !isValidFsName(name) {
 			return fmt.Errorf("%s is not a valid name", name)
 		} else if isDirName(name) {
 			d := name[:len(name)-1]
-			curDir.addDir(d)
-			dir, _ := curDir.childNamed(d)
+			curDir.AddDir(d)
+			dir, _ := curDir.ChildNamed(d)
 			nodePath = append(nodePath, dir)
 			enterDir = true
 		} else {
-			curDir.addFile(name)
+			curDir.AddFile(name)
 		}
 
 		if err == io.EOF {
@@ -104,10 +111,6 @@ func isValidFsName(n string) bool {
 		}
 	}
 	return true
-}
-
-func newRootDir() *fsNode {
-	return &fsNode{"", []*fsNode{}}
 }
 
 func indentLvl(s string) int {

@@ -1,4 +1,4 @@
-// Copyright 2012 Sean Kelleher. All rights reserved.
+// Copyright 2012-2014 Sean Kelleher. All rights reserved.
 // Use of this source code is governed by a GPL
 // license that can be found in the LICENSE file.
 
@@ -8,6 +8,7 @@ import (
 	"bake/env"
 	"bufio"
 	"fmt"
+	"fs"
 	"io"
 	"os"
 	"path"
@@ -31,9 +32,9 @@ func (p *Project) GenTo(dest string) error {
 	if err != nil {
 		return err
 	}
-	incls.name = "{ProjectName}"
+	root := fs.NewDir("{ProjectName}", incls.Children()...)
 
-	return p.genDirConts(&fsNode{children: []*fsNode{incls}}, langRoot, "")
+	return p.genDirConts(fs.NewDir("").AddNode(root), langRoot, "")
 }
 
 func joinAll(dir string, fnames []string) []string {
@@ -45,17 +46,17 @@ func joinAll(dir string, fnames []string) []string {
 	return paths
 }
 
-func (p *Project) genDirConts(dir *fsNode, srcDir, tgtDir string) error {
-	for _, node := range dir.children {
-		src := path.Join(srcDir, node.name)
+func (p *Project) genDirConts(dir *fs.Node, srcDir, tgtDir string) error {
+	for _, node := range dir.Children() {
+		src := path.Join(srcDir, node.Name())
 
-		tgtName, err := p.dict.ExpandStr(node.name)
+		tgtName, err := p.dict.ExpandStr(node.Name())
 		if err != nil {
 			return err
 		}
 		tgt := path.Join(tgtDir, tgtName)
 
-		if node.children == nil { // not a dir
+		if node.Children() == nil { // not a dir
 			err = p.genFile(src, tgt)
 		} else if err = p.genDir(tgt); err == nil {
 			err = p.genDirConts(node, src, tgt)
