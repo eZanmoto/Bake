@@ -59,32 +59,3 @@ run with
 
     > bin/bake
     Bake (C) 2013 Sean Kelleher
-
-### Configuration
-
-Bake is designed so that it doesn't keep any persistent state, so that means
-there's no option for configuration of the tool, like storing your name, etc.
-Emulating such behaviour is trivial by creating a script called `bake` located
-on your path with content such as the following
-
-    #!/bin/bash
-
-    $BAKE/bin/bake -o "Sean Kelleher" -e ezanmoto@gmail.com "$@"
-
-Such a script will allow you to "store" your settings in a script of your own
-design, and means that you won't have to go searching for where configuration
-files are stored and adhere to configuration formatting, especially since Bake
-isn't a tool that one will be using very often. Using scripts like this to
-invoke `bake` can be especially handy if you generally only code in one
-language, and generally create the same type of project, such as a Java project
-that uses Ant and JUnit:
-
-    #!/bin/bash
-
-    $BAKE/bin/bake \
-        -o "Sean Kelleher" \
-        -e ezanmoto@gmail.com \
-        -l java \
-        -t ant \
-        -t junit \
-        "$@"

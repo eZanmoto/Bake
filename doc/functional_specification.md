@@ -57,29 +57,16 @@ generating meaningful documentation.
 ##### Miscellaneous
 
 + --verbose     -v  Prints extra information as the program progresses.
++ --default     -d  Use the arguments given to options during this run as the
+                    default values of those options.
++ --rm-default  -D  Remove the default values of the specified language.
++ --set-default -s  Set default values (as with `--default`) without running
+                    tool.
 
 ### Missing Features
 
 Features that were considered but ultimately left out are provided here with
 reasons for their omission.
-
-#### Globals
-
-The owner and email values to bake are unlikely to change over the course of use
-of bake by a single developer, so it would make sense to abstract these away to
-a global value store. The advantage of this would be that the developer doesn't
-have to include these details every time he runs the tool.
-
-However, bake is not the kind of tool that is going to be executed a lot by a
-single developer either. There is very little saved by having these values
-stored by the program, but if the user wants to change the values in case of
-error, or if using bake on a new machine, he will have to search through
-documentation to figure out how. In this case, it is actually easier to just
-have the developer enter the values manually each time the tool is run. If
-sufficient use is made of the tool, it can always be abstracted away within a
-one-line wrapper script, such as the following:
-
-    bake --owner 'Sean Kelleher' --email ezanmoto@gmail.com -v "$@"
 
 #### Support for Mutually Exclusive Types
 
@@ -196,3 +183,38 @@ like the following:
     Creating directory '/home/sean/code/new/src'...
     Creating file '/home/sean/code/new/src/main.c'...
     Creating file '/home/sean/code/new/src/options.c'...
+
+### Examples
+
+#### Default Values
+
+`--default` and `--set` are used to set the current parameters (except for the
+project name) as the default values of those parameters for the current
+language, although some global options (such as name and email) are set as
+default parameter values for all languages. An possible example of their usage
+is as follows:
+
+    > bake -o 'Sean Kelleher' -l c -n bake
+    /home/sean/code/bake/README
+    /home/sean/code/bake/src
+    /home/sean/code/bake/src/bake.c
+
+    > bake -d -o 'Sean Kelleher' -l c -t make,lib -n xlib
+    /home/sean/code/xlib/makefile
+    /home/sean/code/xlib/README
+    /home/sean/code/xlib/src
+    /home/sean/code/xlib/src/xlib.c
+    /home/sean/code/xlib/include
+    /home/sean/code/xlib/include/xlib.h
+
+    > bake -l c -n ylib
+    /home/sean/code/ylib/makefile
+    /home/sean/code/ylib/README
+    /home/sean/code/ylib/src
+    /home/sean/code/ylib/src/ylib.c
+    /home/sean/code/ylib/include
+    /home/sean/code/ylib/include/ylib.h
+
+Because `-d` was passed in the second example run of bake, `Sean Kelleher` is
+set as the default value for the `-o` parameter (otherwise the example wouldn't
+run) and `make,lib` is set as the default value for the `-t` parameter.
