@@ -10,6 +10,8 @@ import (
 )
 
 const (
+	// `dirSep` is simply for formatting directory paths, and is independent
+	// of the actual platform being used.
 	dirSep = "/"
 )
 
