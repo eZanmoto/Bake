@@ -18,14 +18,12 @@ func SupportedLangs() ([]string, error) {
 		return nil, err
 	}
 
-	langs := make([]string, len(files))
-	numLangs := 0
+	langs := make([]string, 0, len(files))
 	for _, file := range files {
 		if file.IsDir() {
-			langs[numLangs] = file.Name()
-			numLangs++
+			langs = append(langs, file.Name())
 		}
 	}
 
-	return langs[:numLangs], nil
+	return langs, nil
 }
