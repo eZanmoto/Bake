@@ -25,7 +25,7 @@ following for usage information, and to ensure that it is running correctly.
 
 To generate a project with `bake`, you must specify at least the name of the
 project, the name of the owner of the project, and the programming language the
-owner is to be written in. An example command that could be used to create the
+project is to be written in. An example command that could be used to create the
 Bake project itself might be:
 
     > bake -n Bake -l go -o 'Sean Kelleher'
